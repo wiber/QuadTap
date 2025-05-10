@@ -1826,6 +1826,11 @@ t = () => ( () => {
                     this.elements.video.setAttribute('playsinline', '');
                     this.elements.video.setAttribute('webkit-playsinline', '');
                     
+                    // ADDED: Disable native video controls
+                    this.elements.video.removeAttribute('controls');
+                    // For some players that might override this, try to force it
+                    this.elements.video.controls = false;
+                    
                     // Find and disable any fullscreen buttons in the video player
                     setTimeout(function() {
                         try {
@@ -2069,12 +2074,42 @@ t = () => ( () => {
             key: "calculateResponsiveEmojiSize",
             value: function() {
                 var t, e, o = this.state.containerDimensions, n = o.width, i = o.height, a = Math.min(n, i);
-                return a < 300 ? (t = "1.5rem",
-                e = "2.2rem") : a < 500 ? (t = "2rem",
-                e = "2.8rem") : a < 800 ? (t = "2.5rem",
-                e = "3.5rem") : (t = "3rem",
-                e = "4rem"),
-                {
+                
+                // Check if we're on a mobile device
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+                
+                // More aggressive scaling for small screens
+                if (a < 200) {
+                    t = "1rem";
+                    e = "1.5rem";
+                } else if (a < 300) {
+                    t = "1.2rem";
+                    e = "1.8rem";
+                } else if (a < 400) {
+                    t = "1.5rem";
+                    e = "2.2rem";
+                } else if (a < 600) {
+                    t = "2rem";
+                    e = "2.8rem";
+                } else if (a < 800) {
+                    t = "2.5rem";
+                    e = "3.5rem";
+                } else {
+                    t = "3rem";
+                    e = "4rem";
+                }
+                
+                // Further reduce size on mobile
+                if (isMobile) {
+                    t = t.replace(/([0-9.]+)rem/, function(match, size) {
+                        return (parseFloat(size) * 0.8) + "rem";
+                    });
+                    e = e.replace(/([0-9.]+)rem/, function(match, size) {
+                        return (parseFloat(size) * 0.8) + "rem";
+                    });
+                }
+                
+                return {
                     defaultSize: t,
                     enlargedSize: e,
                     defaultOpacity: "0.6",
@@ -2089,14 +2124,26 @@ t = () => ( () => {
                 var containerHeight = this.state.containerDimensions.height;
                 var minDimension = Math.min(containerWidth, containerHeight);
                 
-                // Scale bubble size based on container dimensions
+                // Check if we're on a mobile device
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+                
+                // More fine-grained scaling for better responsiveness
                 var bubbleSize;
-                if (minDimension < 300) {
-                    bubbleSize = 40; // Smaller bubbles for tiny containers
-                } else if (minDimension < 500) {
-                    bubbleSize = 50; // Medium bubbles for small containers
+                if (minDimension < 200) {
+                    bubbleSize = 30; // Extra small for tiny containers
+                } else if (minDimension < 300) {
+                    bubbleSize = 36; // Smaller bubbles for very small containers
+                } else if (minDimension < 400) {
+                    bubbleSize = 44; // Small bubbles for small containers
+                } else if (minDimension < 600) {
+                    bubbleSize = 52; // Medium bubbles
                 } else {
                     bubbleSize = 60; // Default size for regular containers
+                }
+                
+                // Further reduce size on mobile
+                if (isMobile) {
+                    bubbleSize = Math.floor(bubbleSize * 0.85);
                 }
                 
                 return {
