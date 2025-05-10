@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuadTap Non-Emoji Control Strip Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            margin: 20px 0;
+        }
+        video {
+            width: 100%;
+            display: block;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .event-log {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .log-entry.info {
+            color: #0066cc;
+        }
+        .log-entry.success {
+            color: #4CAF50;
+        }
+        .log-entry.error {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QuadTap Non-Emoji Control Strip Test</h1>
+        
+        <div class="video-container" id="main-video-droppable">
+            <video id="main-video" controls>
+                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        
+        <div class="controls">
+            <button id="init-btn">Initialize QuadTap</button>
+            <button id="activate-btn">Activate Overlay</button>
+            <button id="open-lightbox-btn">Open Lightbox</button>
+            <button id="clear-log-btn">Clear Log</button>
+        </div>
+        
+        <div class="event-log" id="event-log">
+            <div class="log-entry info">Event log initialized</div>
+        </div>
+    </div>
+
+    <script src="../dist/quad-tap.js"></script>
+    <script>
+        // Log function
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Global QuadTap instance
+        let quadTap = null;
+
+        // Initialize QuadTap
+        document.getElementById('init-btn').addEventListener('click', function() {
+            try {
+                // Destroy existing instance if any
+                if (quadTap) {
+                    quadTap.destroy();
+                    quadTap = null;
+                }
+                
+                // Create new instance
+                quadTap = new QuadTap({
+                    containerId: "main-video-droppable",
+                    videoSelector: "#main-video",
+                    debug: true,
+                    videoControls: {
+                        enabled: true,
+                        rewindTime: 10,
+                        forwardTime: 10
+                    },
+                    callbacks: {
+                        onOverlayActivate: (x, y) => {
+                            log(`Overlay activated at (${x}, ${y})`, 'success');
+                        },
+                        onThrowDownInitiate: (quadrant, x, y) => {
+                            log(`ThrowDown initiated in ${quadrant} quadrant at (${x.toFixed(2)}, ${y.toFixed(2)})`, 'success');
+                        },
+                        onThrowDownConfirm: (quadrant, x, y, videoInfo) => {
+                            log(`ThrowDown confirmed in ${quadrant} quadrant at (${x.toFixed(2)}, ${y.toFixed(2)})`, 'success');
+                            if (videoInfo) {
+                                log(`Video time: ${videoInfo.currentTime.toFixed(2)}s / ${videoInfo.duration.toFixed(2)}s`, 'info');
+                            }
+                        },
+                        onThrowDownCancel: (quadrant) => {
+                            log(`ThrowDown cancelled in ${quadrant} quadrant`, 'info');
+                        },
+                        onVideoControl: (action, time) => {
+                            log(`Video control: ${action} at ${time ? time.toFixed(2) : 'N/A'}s`, 'info');
+                        }
+                    }
+                });
+                
+                log('QuadTap initialized successfully', 'success');
+            } catch (error) {
+                log(`Error initializing QuadTap: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        // Activate overlay programmatically
+        document.getElementById('activate-btn').addEventListener('click', function() {
+            if (!quadTap) {
+                log('QuadTap not initialized', 'error');
+                return;
+            }
+            
+            try {
+                // Get container dimensions
+                const container = document.getElementById('main-video-droppable');
+                const rect = container.getBoundingClientRect();
+                
+                // Calculate center point
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                // Activate overlay at center point
+                quadTap.activateOverlay(centerX, centerY);
+                
+                log(`Overlay activated programmatically at center (${centerX.toFixed(0)}, ${centerY.toFixed(0)})`, 'success');
+            } catch (error) {
+                log(`Error activating overlay: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        // Open lightbox programmatically
+        document.getElementById('open-lightbox-btn').addEventListener('click', function() {
+            if (!quadTap) {
+                log('QuadTap not initialized', 'error');
+                return;
+            }
+            
+            try {
+                // First activate overlay if not active
+                if (!quadTap.state.active) {
+                    const container = document.getElementById('main-video-droppable');
+                    const rect = container.getBoundingClientRect();
+                    quadTap.activateOverlay(rect.width / 2, rect.height / 2);
+                    log('Overlay activated before opening lightbox', 'info');
+                }
+                
+                // Open lightbox
+                quadTap.openLightBox();
+                
+                log('Lightbox opened programmatically', 'success');
+            } catch (error) {
+                log(`Error opening lightbox: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        // Clear log
+        document.getElementById('clear-log-btn').addEventListener('click', function() {
+            const logContainer = document.getElementById('event-log');
+            logContainer.innerHTML = '<div class="log-entry info">Event log cleared</div>';
+        });
+
+    // Initialize on page load
+    window.addEventListener('load', function() {
+        log('Page loaded. Automatically initializing QuadTap...', 'info');
+        document.getElementById('init-btn').click();
+    });
+    </script>
+</body>
+</html>

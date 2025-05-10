@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lightbox Control Strip Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    
+    #main-video-droppable {
+      position: relative;
+      width: 800px;
+      height: 450px;
+      margin: 0 auto;
+      background-color: #000;
+      overflow: hidden;
+    }
+    
+    #main-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    
+    .controls {
+      margin: 20px auto;
+      width: 800px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    button {
+      padding: 10px 15px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .lightbox-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .lightbox-content {
+      width: 80%;
+      max-width: 1000px;
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      border-radius: 8px;
+      position: relative;
+    }
+    
+    .close-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      color: white;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .test-results {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #fff;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .test-results h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .log {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      margin: 5px 0;
+      padding: 3px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .success {
+      color: #4caf50;
+    }
+    
+    .error {
+      color: #f44336;
+    }
+    
+    .info {
+      color: #2196f3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lightbox Control Strip Test</h1>
+  <p>This test verifies that the control strip works correctly in both overlay and lightbox contexts.</p>
+  
+  <div id="main-video-droppable">
+    <video id="main-video" controls>
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  
+  <div class="controls">
+    <button id="activate-overlay">Activate Overlay</button>
+    <button id="open-lightbox">Open Lightbox Directly</button>
+    <button id="run-tests">Run All Tests</button>
+  </div>
+  
+  <div class="lightbox-container" id="manual-lightbox">
+    <div class="lightbox-content">
+      <button class="close-button">&times;</button>
+      <h2>Lightbox Mode</h2>
+      <p>This is a manual lightbox to test the control strip in lightbox mode.</p>
+      <div id="lightbox-control-container"></div>
+    </div>
+  </div>
+  
+  <div class="test-results">
+    <h3>Test Results</h3>
+    <div class="log" id="test-log"></div>
+  </div>
+  
+  <script type="module">
+    import { createUnifiedControlStrip } from '../src/components/UnifiedControlStrip.js';
+    import { layoutControlStrip } from '../src/helpers/layout.js';
+    
+    // Log function
+    function log(message, type = 'info') {
+      const logElement = document.getElementById('test-log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = message;
+      logElement.appendChild(entry);
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+    
+    // Test function
+    function runTest(name, testFn) {
+      try {
+        log(`Running test: ${name}`, 'info');
+        const result = testFn();
+        if (result === false) {
+          log(`❌ Test failed: ${name}`, 'error');
+        } else {
+          log(`✅ Test passed: ${name}`, 'success');
+        }
+      } catch (error) {
+        log(`❌ Test error: ${name} - ${error.message}`, 'error');
+        console.error(error);
+      }
+    }
+    
+    // Get elements
+    const video = document.getElementById('main-video');
+    const container = document.getElementById('main-video-droppable');
+    const activateOverlayButton = document.getElementById('activate-overlay');
+    const openLightboxButton = document.getElementById('open-lightbox');
+    const runTestsButton = document.getElementById('run-tests');
+    const lightbox = document.getElementById('manual-lightbox');
+    const lightboxCloseButton = lightbox.querySelector('.close-button');
+    const lightboxControlContainer = document.getElementById('lightbox-control-container');
+    
+    // Create control strip
+    let controlStrip = null;
+    
+    // Initialize
+    function initialize() {
+      // Create control strip
+      controlStrip = createUnifiedControlStrip({
+        container: container,
+        video: video,
+        rewindTime: 30,
+        forwardTime: 30,
+        debug: true
+      });
+      
+      // Add to container initially
+      container.appendChild(controlStrip.element);
+      
+      // Set to overlay mode
+      controlStrip.setMode('overlay', container);
+      
+      // Hide initially
+      controlStrip.element.style.display = 'none';
+      
+      log('Control strip initialized', 'info');
+    }
+    
+    // Activate overlay
+    function activateOverlay() {
+      // Show control strip
+      controlStrip.element.style.display = 'flex';
+      
+      // Set to overlay mode
+      controlStrip.setMode('overlay', container);
+      
+      // Bind events
+      controlStrip.bindEvents();
+      
+      log('Overlay activated', 'info');
+    }
+    
+    // Open lightbox
+    function openLightbox() {
+      // Show lightbox
+      lightbox.style.display = 'flex';
+      
+      // Move control strip to lightbox
+      if (controlStrip.element.parentNode) {
+        controlStrip.element.parentNode.removeChild(controlStrip.element);
+      }
+      
+      lightboxControlContainer.appendChild(controlStrip.element);
+      
+      // Set to lightbox mode
+      controlStrip.setMode('lightbox', lightboxControlContainer);
+      
+      // Show control strip
+      controlStrip.element.style.display = 'flex';
+      
+      // Bind events
+      controlStrip.bindEvents();
+      
+      log('Lightbox opened', 'info');
+    }
+    
+    // Close lightbox
+    function closeLightbox() {
+      // Hide lightbox
+      lightbox.style.display = 'none';
+      
+      // Move control strip back to container
+      if (controlStrip.element.parentNode) {
+        controlStrip.element.parentNode.removeChild(controlStrip.element);
+      }
+      
+      container.appendChild(controlStrip.element);
+      
+      // Set to overlay mode
+      controlStrip.setMode('overlay', container);
+      
+      // Hide control strip
+      controlStrip.element.style.display = 'none';
+      
+      log('Lightbox closed', 'info');
+    }
+    
+    // Run all tests
+    function runAllTests() {
+      log('Starting tests...', 'info');
+      
+      // Test 1: Control strip creation
+      runTest('Control strip creation', () => {
+        return controlStrip && controlStrip.element;
+      });
+      
+      // Test 2: Control strip has all required buttons
+      runTest('Control strip has all required buttons', () => {
+        const rewindButton = controlStrip.element.querySelector('[data-cmd="seek:-30"]');
+        const playPauseButton = controlStrip.element.querySelector('[data-cmd="play"]');
+        const forwardButton = controlStrip.element.querySelector('[data-cmd="seek:+30"]');
+        const shareButton = controlStrip.element.querySelector('[data-cmd="share"]');
+        
+        return rewindButton && playPauseButton && forwardButton && shareButton;
+      });
+      
+      // Test 3: Overlay mode positioning
+      runTest('Overlay mode positioning', () => {
+        // Set to overlay mode
+        controlStrip.setMode('overlay', container);
+        
+        // Check position styles
+        const style = window.getComputedStyle(controlStrip.element);
+        return style.position === 'absolute';
+      });
+      
+      // Test 4: Lightbox mode positioning
+      runTest('Lightbox mode positioning', () => {
+        // Set to lightbox mode
+        controlStrip.setMode('lightbox', lightboxControlContainer);
+        
+        // Check position styles
+        const style = window.getComputedStyle(controlStrip.element);
+        return style.position === 'static';
+      });
+      
+      // Test 5: Play/pause button functionality
+      runTest('Play/pause button functionality', () => {
+        // Get play/pause button
+        const playPauseButton = controlStrip.element.querySelector('[data-cmd="play"]');
+        
+        // Store initial state
+        const wasPlaying = !video.paused;
+        
+        // Click button
+        playPauseButton.click();
+        
+        // Check if state changed
+        const isPlaying = !video.paused;
+        
+        // Restore original state
+        if (wasPlaying !== isPlaying) {
+          playPauseButton.click();
+        }
+        
+        return wasPlaying !== isPlaying;
+      });
+      
+      // Test 6: Rewind button functionality
+      runTest('Rewind button functionality', () => {
+        // Get rewind button
+        const rewindButton = controlStrip.element.querySelector('[data-cmd="seek:-30"]');
+        
+        // Store initial time
+        const initialTime = video.currentTime;
+        
+        // Set time to ensure we can rewind
+        if (initialTime < 35) {
+          video.currentTime = 60;
+        }
+        
+        // Click button
+        rewindButton.click();
+        
+        // Check if time changed
+        const newTime = video.currentTime;
+        
+        // Restore original time
+        video.currentTime = initialTime;
+        
+        return newTime < (initialTime < 35 ? 60 : initialTime);
+      });
+      
+      // Test 7: Forward button functionality
+      runTest('Forward button functionality', () => {
+        // Get forward button
+        const forwardButton = controlStrip.element.querySelector('[data-cmd="seek:+30"]');
+        
+        // Store initial time
+        const initialTime = video.currentTime;
+        
+        // Set time to ensure we can forward
+        if (initialTime > video.duration - 35) {
+          video.currentTime = video.duration - 60;
+        }
+        
+        // Click button
+        forwardButton.click();
+        
+        // Check if time changed
+        const newTime = video.currentTime;
+        
+        // Restore original time
+        video.currentTime = initialTime;
+        
+        return newTime > (initialTime > video.duration - 35 ? video.duration - 60 : initialTime);
+      });
+      
+      // Test 8: Mode transition - overlay to lightbox
+      runTest('Mode transition - overlay to lightbox', () => {
+        // Set to overlay mode
+        controlStrip.setMode('overlay', container);
+        
+        // Check overlay class
+        const hasOverlayClass = controlStrip.element.classList.contains('qt-control-strip--overlay');
+        
+        // Set to lightbox mode
+        controlStrip.setMode('lightbox', lightboxControlContainer);
+        
+        // Check lightbox class
+        const hasLightboxClass = controlStrip.element.classList.contains('qt-control-strip--lightbox');
+        
+        return hasOverlayClass && hasLightboxClass;
+      });
+      
+      // Test 9: Clean positioning in lightbox mode
+      runTest('Clean positioning in lightbox mode', () => {
+        // Set to lightbox mode
+        controlStrip.setMode('lightbox', lightboxControlContainer);
+        
+        // Check that top/left are empty
+        return controlStrip.element.style.top === '' && 
+               controlStrip.element.style.left === '';
+      });
+      
+      log('All tests completed', 'info');
+    }
+    
+    // Event listeners
+    activateOverlayButton.addEventListener('click', activateOverlay);
+    openLightboxButton.addEventListener('click', openLightbox);
+    runTestsButton.addEventListener('click', runAllTests);
+    lightboxCloseButton.addEventListener('click', closeLightbox);
+    
+    // Initialize on load
+    window.addEventListener('load', initialize);
+  </script>
+</body>
+</html>

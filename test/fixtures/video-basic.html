@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quad-Tap Video Test Fixture</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f0f0f0;
+    }
+    
+    #main-video-droppable {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      background-color: #000;
+    }
+    
+    video {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script src="../../dist/quad-tap.js"></script>
+</head>
+<body>
+  <div id="main-video-droppable">
+    <video id="main-video" controls autoplay muted loop>
+      <!-- Use a sample video that's likely to exist in most test environments -->
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <script>
+    // Set a flag to indicate the script has loaded
+    window.scriptLoaded = true;
+    
+    // Make sure the ControlStrip module is available globally for testing
+    window.ensureControlStripModuleAvailable = function() {
+      if (typeof QuadTap !== 'undefined' && typeof QuadTap.prototype.openLightBox === 'function') {
+        // Extract the updatePlayPauseButton function from the ControlStrip module
+        try {
+          // This is a workaround to ensure the updatePlayPauseButton function is available
+          if (!window.updatePlayPauseButton) {
+            console.log('Setting up updatePlayPauseButton globally');
+            // Define a fallback implementation if needed
+            window.updatePlayPauseButton = function(controlStrip, isPlaying) {
+              console.log('Global updatePlayPauseButton called', { isPlaying });
+              const playPauseButton = controlStrip.querySelector('button:nth-child(2)');
+              if (playPauseButton) {
+                playPauseButton.textContent = isPlaying ? '❚❚' : '▶';
+              }
+            };
+          }
+          return true;
+        } catch (err) {
+          console.error('Error setting up updatePlayPauseButton:', err);
+          return false;
+        }
+      }
+      return false;
+    };
+    
+    // Initialize QuadTap with a retry mechanism
+    window.initQuadTap = function() {
+      try {
+        console.log('Initializing QuadTap...');
+        
+        // Make sure the script is loaded
+        if (typeof QuadTap === 'undefined') {
+          console.error('QuadTap is not defined! Script may not be loaded correctly.');
+          window.quadTapError = 'QuadTap is not defined';
+          
+          // Retry after a short delay
+          setTimeout(window.initQuadTap, 500);
+          return;
+        }
+        
+        // Ensure the ControlStrip module is available
+        window.ensureControlStripModuleAvailable();
+        
+        // Initialize QuadTap with default settings
+        const quadTap = new QuadTap({
+          containerId: 'main-video-droppable',
+          videoSelector: '#main-video',
+          debug: true,
+          videoControls: {
+            enabled: true,
+            pauseOnLightboxOnly: true  // Explicitly set to true for this test
+          },
+          callbacks: {
+            onOverlayActivate: function(x, y) {
+              console.log('Overlay activated at', x, y);
+            },
+            onThrowDownInitiate: function(quadrant, x, y) {
+              console.log('Lightbox opened', { quadrant, x, y });
+            }
+          }
+        });
+
+        // Expose quadTap instance for testing
+        window.quadTap = quadTap;
+        window.quadTapInitialized = true;
+        console.log('QuadTap initialized successfully');
+        
+        // Add a global helper function to manually activate the overlay
+        window.activateOverlay = function() {
+          const container = document.getElementById('main-video-droppable');
+          if (container) {
+            const rect = container.getBoundingClientRect();
+            const x = rect.width / 2;
+            const y = rect.height / 2;
+            console.log('Manually activating overlay at', x, y);
+            quadTap.activateOverlay(x, y);
+            return true;
+          }
+          return false;
+        };
+        
+        // Add a global helper function to manually open the lightbox
+        window.openLightBox = function() {
+          console.log('Manually opening lightbox');
+          quadTap.openLightBox();
+          return true;
+        };
+        
+        // Add destroy and reinitialize buttons for testing
+        const controlPanel = document.createElement('div');
+        controlPanel.style.position = 'fixed';
+        controlPanel.style.top = '10px';
+        controlPanel.style.right = '10px';
+        controlPanel.style.zIndex = '9999';
+        controlPanel.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        controlPanel.style.padding = '10px';
+        controlPanel.style.borderRadius = '5px';
+        
+        const destroyButton = document.createElement('button');
+        destroyButton.textContent = 'Destroy QuadTap';
+        destroyButton.style.marginRight = '10px';
+        destroyButton.style.padding = '5px 10px';
+        destroyButton.addEventListener('click', function() {
+          if (window.quadTap) {
+            window.quadTap.destroy();
+            window.quadTap = null;
+            window.quadTapInitialized = false;
+            console.log('QuadTap destroyed');
+          }
+        });
+        
+        const initButton = document.createElement('button');
+        initButton.textContent = 'Initialize QuadTap';
+        initButton.style.padding = '5px 10px';
+        initButton.addEventListener('click', function() {
+          if (!window.quadTapInitialized) {
+            window.initQuadTap();
+          }
+        });
+        
+        controlPanel.appendChild(destroyButton);
+        controlPanel.appendChild(initButton);
+        document.body.appendChild(controlPanel);
+        
+        return quadTap;
+      } catch (err) {
+        console.error('Error initializing QuadTap:', err);
+        window.quadTapError = err.message;
+        
+        // Retry after a short delay
+        setTimeout(window.initQuadTap, 1000);
+      }
+    };
+    
+    // Try to initialize immediately
+    window.initQuadTap();
+    
+    // Also ensure initialization on DOMContentLoaded as a fallback
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!window.quadTapInitialized) {
+        console.log('QuadTap not initialized yet, initializing now...');
+        window.initQuadTap();
+      }
+    });
+    
+    // Final fallback - try again after a delay
+    setTimeout(function() {
+      if (!window.quadTapInitialized) {
+        console.log('Final attempt to initialize QuadTap...');
+        window.initQuadTap();
+      }
+    }, 2000);
+  </script>
+</body>
+</html>

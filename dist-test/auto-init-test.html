@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Auto-Initialization Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    video {
+      width: 100%;
+      display: block;
+    }
+    
+    .event-log {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .event-log h3 {
+      margin-top: 0;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #999;
+      font-size: 0.8em;
+    }
+    
+    .log-type {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    
+    .log-type.info {
+      color: #2196F3;
+    }
+    
+    .log-type.error {
+      color: #f44336;
+    }
+    
+    .log-type.warn {
+      color: #ff9800;
+    }
+    
+    .log-type.success {
+      color: #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QuadTap Auto-Initialization Test</h1>
+    <p>This page tests the auto-initialization feature of QuadTap. The overlay should automatically initialize when the page loads.</p>
+    
+    <!-- Video container with the default ID that QuadTap looks for -->
+    <div class="video-container" id="main-video-droppable">
+      <video id="main-video" controls data-video-id="test-video-123">
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    
+    <div class="event-log">
+      <h3>Event Log</h3>
+      <div id="log-container"></div>
+    </div>
+  </div>
+
+  <!-- Load the QuadTap script -->
+  <script src="quad-tap.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const logContainer = document.getElementById('log-container');
+      
+      // Add log entry function
+      function addLogEntry(type, message, data) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const time = new Date().toLocaleTimeString();
+        const logTime = document.createElement('span');
+        logTime.className = 'log-time';
+        logTime.textContent = `[${time}] `;
+        
+        const logType = document.createElement('span');
+        logType.className = `log-type ${type}`;
+        logType.textContent = type.toUpperCase();
+        
+        const logMessage = document.createElement('span');
+        logMessage.className = 'log-message';
+        logMessage.textContent = ` ${message}`;
+        
+        logEntry.appendChild(logTime);
+        logEntry.appendChild(logType);
+        logEntry.appendChild(logMessage);
+        
+        if (data) {
+          const logData = document.createElement('div');
+          logData.className = 'log-data';
+          logData.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+          logEntry.appendChild(logData);
+        }
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+      
+      // Override console.log to capture QuadTap logs
+      const originalConsoleLog = console.log;
+      console.log = function() {
+        // Call original console.log
+        originalConsoleLog.apply(console, arguments);
+        
+        // Check if this is a QuadTap log
+        if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].includes('[QuadTap]')) {
+          // Add to log container
+          addLogEntry('info', arguments[0], arguments[1] || '');
+        }
+      };
+      
+      // Add initial log entry
+      addLogEntry('info', 'Page loaded, checking if QuadTap auto-initialized...');
+      
+      // Check if QuadTap is available and initialized
+      setTimeout(() => {
+        if (window.quadTap) {
+          addLogEntry('success', 'QuadTap auto-initialized successfully!');
+          
+          // Add a test function to activate the overlay
+          window.testActivateOverlay = function() {
+            if (window.quadTap) {
+              const container = document.getElementById('main-video-droppable');
+              const rect = container.getBoundingClientRect();
+              const x = rect.width / 2;
+              const y = rect.height / 2;
+              
+              addLogEntry('info', `Activating overlay at position (${x}, ${y})`);
+              window.quadTap.activateOverlay(x, y);
+              return true;
+            }
+            return false;
+          };
+          
+          addLogEntry('info', 'You can test the overlay by running: window.testActivateOverlay()');
+        } else {
+          addLogEntry('error', 'QuadTap did not auto-initialize. Check the console for errors.');
+        }
+      }, 2500); // Check after 2.5 seconds to give it time to initialize
+    });
+  </script>
+</body>
+</html>

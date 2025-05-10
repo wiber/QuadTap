@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Video Player Adapter Examples</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      margin-bottom: 40px;
+    }
+    .video-container {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      margin-bottom: 20px;
+    }
+    .code-example {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-family: monospace;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #333;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    h2 {
+      color: #444;
+      margin-top: 30px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background-color: #eee;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+    }
+    .tab.active {
+      background-color: #fff;
+      border-bottom: 1px solid #fff;
+      position: relative;
+      z-index: 1;
+    }
+    .tab-content {
+      display: none;
+      border: 1px solid #ddd;
+      padding: 20px;
+      border-radius: 0 5px 5px 5px;
+      margin-top: -1px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .controls {
+      margin-top: 10px;
+    }
+    button {
+      padding: 8px 15px;
+      margin-right: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>QuadTap Video Player Adapter Examples</h1>
+  
+  <p>This page demonstrates how to use the QuadTap VideoPlayerAdapter with different video players.</p>
+  
+  <div class="tabs">
+    <div class="tab active" data-tab="html5">HTML5 Video</div>
+    <div class="tab" data-tab="youtube">YouTube</div>
+    <div class="tab" data-tab="vimeo">Vimeo</div>
+    <div class="tab" data-tab="custom">Custom Player</div>
+  </div>
+  
+  <div class="tab-content active" id="html5-content">
+    <h2>HTML5 Video Example</h2>
+    
+    <div class="video-container" id="html5-container">
+      <video id="html5-video" controls width="640" height="360">
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    
+    <div class="controls">
+      <button id="html5-init">Initialize QuadTap</button>
+      <button id="html5-destroy">Destroy QuadTap</button>
+    </div>
+    
+    <div class="status" id="html5-status">Status: Not initialized</div>
+    
+    <h3>Code Example</h3>
+    <div class="code-example">
+      <pre>
+// Import required classes
+import QuadTap from 'quad-tap';
+import VideoPlayerAdapter from 'quad-tap/adapters/VideoPlayerAdapter';
+import SettingsBuilder from 'quad-tap/SettingsBuilder';
+
+// Get the video element
+const videoElement = document.querySelector('#html5-video');
+
+// Create an adapter for HTML5 video
+const adapter = VideoPlayerAdapter.forHtml5Video(videoElement, true);
+
+// Create settings using the SettingsBuilder
+const settings = new SettingsBuilder()
+  .withContainer('html5-container')
+  .withVideoSelector('#html5-video')
+  .withDebug(true)
+  .withVideoPlayerAdapter(adapter)
+  .withVideoControls({
+    enabled: true,
+    position: 'center',
+    autoHide: true,
+    autoHideDelay: 2000,
+    pauseOnLightboxOnly: true
+  })
+  .build();
+
+// Initialize QuadTap with the settings
+const quadTap = new QuadTap(settings);
+      </pre>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="youtube-content">
+    <h2>YouTube Example</h2>
+    
+    <div class="video-container" id="youtube-container">
+      <div id="youtube-player"></div>
+    </div>
+    
+    <div class="controls">
+      <button id="youtube-init">Initialize QuadTap</button>
+      <button id="youtube-destroy">Destroy QuadTap</button>
+    </div>
+    
+    <div class="status" id="youtube-status">Status: Not initialized</div>
+    
+    <h3>Code Example</h3>
+    <div class="code-example">
+      <pre>
+// Import required classes
+import QuadTap from 'quad-tap';
+import VideoPlayerAdapter from 'quad-tap/adapters/VideoPlayerAdapter';
+import SettingsBuilder from 'quad-tap/SettingsBuilder';
+
+// Assuming you have a YouTube player instance
+const youtubePlayer = new YT.Player('youtube-player', {
+  videoId: 'VIDEO_ID',
+  events: {
+    'onReady': onPlayerReady,
+    'onStateChange': onPlayerStateChange
+  }
+});
+
+// Create an adapter for YouTube
+const adapter = VideoPlayerAdapter.forYouTube(youtubePlayer, true);
+
+// Create settings using the SettingsBuilder
+const settings = new SettingsBuilder()
+  .withContainer('youtube-container')
+  .withVideoSelector('#youtube-player')
+  .withDebug(true)
+  .withVideoPlayerAdapter(adapter)
+  .withVideoControls({
+    enabled: true,
+    position: 'center',
+    autoHide: true,
+    autoHideDelay: 2000,
+    pauseOnLightboxOnly: true
+  })
+  .build();
+
+// Initialize QuadTap with the settings
+const quadTap = new QuadTap(settings);
+      </pre>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="vimeo-content">
+    <h2>Vimeo Example</h2>
+    
+    <div class="video-container" id="vimeo-container">
+      <div id="vimeo-player"></div>
+    </div>
+    
+    <div class="controls">
+      <button id="vimeo-init">Initialize QuadTap</button>
+      <button id="vimeo-destroy">Destroy QuadTap</button>
+    </div>
+    
+    <div class="status" id="vimeo-status">Status: Not initialized</div>
+    
+    <h3>Code Example</h3>
+    <div class="code-example">
+      <pre>
+// Import required classes
+import QuadTap from 'quad-tap';
+import VideoPlayerAdapter from 'quad-tap/adapters/VideoPlayerAdapter';
+import SettingsBuilder from 'quad-tap/SettingsBuilder';
+
+// Assuming you have a Vimeo player instance
+const vimeoPlayer = new Vimeo.Player('vimeo-player', {
+  id: VIDEO_ID,
+  width: 640
+});
+
+// Create an adapter for Vimeo
+const adapter = VideoPlayerAdapter.forVimeo(vimeoPlayer, true);
+
+// Create settings using the SettingsBuilder
+const settings = new SettingsBuilder()
+  .withContainer('vimeo-container')
+  .withVideoSelector('#vimeo-player')
+  .withDebug(true)
+  .withVideoPlayerAdapter(adapter)
+  .withVideoControls({
+    enabled: true,
+    position: 'center',
+    autoHide: true,
+    autoHideDelay: 2000,
+    pauseOnLightboxOnly: true
+  })
+  .build();
+
+// Initialize QuadTap with the settings
+const quadTap = new QuadTap(settings);
+      </pre>
+    </div>
+  </div>
+  
+  <div class="tab-content" id="custom-content">
+    <h2>Custom Player Example</h2>
+    
+    <div class="video-container" id="custom-container">
+      <div id="custom-player" style="width: 640px; height: 360px; background-color: #000; display: flex; align-items: center; justify-content: center; color: white;">
+        Custom Player Simulation
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="custom-play">Play</button>
+      <button id="custom-pause">Pause</button>
+      <button id="custom-init">Initialize QuadTap</button>
+      <button id="custom-destroy">Destroy QuadTap</button>
+    </div>
+    
+    <div class="status" id="custom-status">Status: Not initialized</div>
+    
+    <h3>Code Example</h3>
+    <div class="code-example">
+      <pre>
+// Import required classes
+import QuadTap from 'quad-tap';
+import VideoPlayerAdapter from 'quad-tap/adapters/VideoPlayerAdapter';
+import SettingsBuilder from 'quad-tap/SettingsBuilder';
+
+// Create a custom adapter for your video player
+const customPlayer = {
+  // Your custom player object or API
+  play: function() { console.log('Custom player: play'); },
+  pause: function() { console.log('Custom player: pause'); },
+  getCurrentTime: function() { return 30; },
+  getDuration: function() { return 120; },
+  isPlaying: function() { return true; }
+};
+
+const adapter = VideoPlayerAdapter.custom({
+  videoElement: customPlayer,
+  api: {
+    playMethod: (player) => player.play(),
+    pauseMethod: (player) => player.pause(),
+    seekMethod: (player, time) => player.seekTo(time),
+    getCurrentTimeMethod: (player) => player.getCurrentTime(),
+    getDurationMethod: (player) => player.getDuration(),
+    getVideoIdMethod: (player) => 'custom-video-123'
+  },
+  debug: true
+});
+
+// Create settings using the SettingsBuilder
+const settings = new SettingsBuilder()
+  .withContainer('custom-container')
+  .withVideoSelector('#custom-player')
+  .withDebug(true)
+  .withVideoPlayerAdapter(adapter)
+  .withVideoControls({
+    enabled: true,
+    position: 'center',
+    autoHide: true,
+    autoHideDelay: 2000,
+    pauseOnLightboxOnly: true
+  })
+  .build();
+
+// Initialize QuadTap with the settings
+const quadTap = new QuadTap(settings);
+      </pre>
+    </div>
+  </div>
+
+  <!-- Load YouTube API -->
+  <script>
+    // Load YouTube API
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var youtubePlayer;
+    function onYouTubeIframeAPIReady() {
+      youtubePlayer = new YT.Player('youtube-player', {
+        height: '360',
+        width: '640',
+        videoId: 'M7lc1UVf-VE',
+        events: {
+          'onReady': onPlayerReady
+        }
+      });
+    }
+
+    function onPlayerReady(event) {
+      document.getElementById('youtube-status').textContent = 'Status: YouTube player ready';
+    }
+  </script>
+
+  <!-- Load Vimeo API -->
+  <script src="https://player.vimeo.com/api/player.js"></script>
+  <script>
+    // Initialize Vimeo player
+    var vimeoPlayer = new Vimeo.Player('vimeo-player', {
+      id: 76979871,
+      width: 640,
+      height: 360
+    });
+
+    vimeoPlayer.ready().then(function() {
+      document.getElementById('vimeo-status').textContent = 'Status: Vimeo player ready';
+    });
+  </script>
+
+  <!-- Custom player simulation -->
+  <script>
+    // Simulate a custom player
+    var customPlayer = {
+      isPlaying: false,
+      currentTime: 0,
+      duration: 120,
+      videoId: 'custom-video-123',
+      
+      play: function() {
+        this.isPlaying = true;
+        document.getElementById('custom-status').textContent = 'Status: Playing';
+        document.getElementById('custom-player').style.backgroundColor = '#333';
+      },
+      
+      pause: function() {
+        this.isPlaying = false;
+        document.getElementById('custom-status').textContent = 'Status: Paused';
+        document.getElementById('custom-player').style.backgroundColor = '#000';
+      },
+      
+      getCurrentTime: function() {
+        return this.currentTime;
+      },
+      
+      getDuration: function() {
+        return this.duration;
+      },
+      
+      getVideoId: function() {
+        return this.videoId;
+      },
+      
+      seekTo: function(time) {
+        this.currentTime = time;
+        document.getElementById('custom-status').textContent = 'Status: Seeked to ' + time + 's';
+      }
+    };
+
+    // Custom player controls
+    document.getElementById('custom-play').addEventListener('click', function() {
+      customPlayer.play();
+    });
+
+    document.getElementById('custom-pause').addEventListener('click', function() {
+      customPlayer.pause();
+    });
+  </script>
+
+  <!-- Tab switching logic -->
+  <script>
+    document.querySelectorAll('.tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(function(t) {
+          t.classList.remove('active');
+        });
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Hide all tab content
+        document.querySelectorAll('.tab-content').forEach(function(content) {
+          content.classList.remove('active');
+        });
+        
+        // Show corresponding tab content
+        var tabId = this.getAttribute('data-tab');
+        document.getElementById(tabId + '-content').classList.add('active');
+      });
+    });
+  </script>
+
+  <!-- Mock QuadTap initialization -->
+  <script>
+    // Mock QuadTap for demonstration purposes
+    function mockQuadTap(settings) {
+      return {
+        destroy: function() {
+          return true;
+        }
+      };
+    }
+
+    // Mock VideoPlayerAdapter for demonstration purposes
+    var VideoPlayerAdapter = {
+      forHtml5Video: function(videoElement, debug) {
+        return {
+          videoElement: videoElement,
+          debug: debug
+        };
+      },
+      forYouTube: function(youtubePlayer, debug) {
+        return {
+          videoElement: youtubePlayer,
+          debug: debug
+        };
+      },
+      forVimeo: function(vimeoPlayer, debug) {
+        return {
+          videoElement: vimeoPlayer,
+          debug: debug
+        };
+      },
+      custom: function(config) {
+        return {
+          videoElement: config.videoElement,
+          api: config.api,
+          debug: config.debug
+        };
+      }
+    };
+
+    // Mock SettingsBuilder for demonstration purposes
+    function SettingsBuilder() {
+      var settings = {};
+      
+      this.withContainer = function(containerId) {
+        settings.containerId = containerId;
+        return this;
+      };
+      
+      this.withVideoSelector = function(videoSelector) {
+        settings.videoSelector = videoSelector;
+        return this;
+      };
+      
+      this.withDebug = function(debug) {
+        settings.debug = debug;
+        return this;
+      };
+      
+      this.withVideoPlayerAdapter = function(adapter) {
+        settings.adapter = adapter;
+        return this;
+      };
+      
+      this.withVideoControls = function(videoControls) {
+        settings.videoControls = videoControls;
+        return this;
+      };
+      
+      this.build = function() {
+        return settings;
+      };
+      
+      return this;
+    }
+
+    // Initialize buttons
+    var quadTapInstances = {
+      html5: null,
+      youtube: null,
+      vimeo: null,
+      custom: null
+    };
+
+    document.getElementById('html5-init').addEventListener('click', function() {
+      var videoElement = document.getElementById('html5-video');
+      var adapter = VideoPlayerAdapter.forHtml5Video(videoElement, true);
+      
+      var settings = new SettingsBuilder()
+        .withContainer('html5-container')
+        .withVideoSelector('#html5-video')
+        .withDebug(true)
+        .withVideoPlayerAdapter(adapter)
+        .withVideoControls({
+          enabled: true,
+          position: 'center',
+          autoHide: true,
+          autoHideDelay: 2000,
+          pauseOnLightboxOnly: true
+        })
+        .build();
+      
+      quadTapInstances.html5 = mockQuadTap(settings);
+      document.getElementById('html5-status').textContent = 'Status: QuadTap initialized with HTML5 video adapter';
+    });
+
+    document.getElementById('html5-destroy').addEventListener('click', function() {
+      if (quadTapInstances.html5) {
+        quadTapInstances.html5.destroy();
+        quadTapInstances.html5 = null;
+        document.getElementById('html5-status').textContent = 'Status: QuadTap destroyed';
+      }
+    });
+
+    document.getElementById('youtube-init').addEventListener('click', function() {
+      if (typeof youtubePlayer !== 'undefined') {
+        var adapter = VideoPlayerAdapter.forYouTube(youtubePlayer, true);
+        
+        var settings = new SettingsBuilder()
+          .withContainer('youtube-container')
+          .withVideoSelector('#youtube-player')
+          .withDebug(true)
+          .withVideoPlayerAdapter(adapter)
+          .withVideoControls({
+            enabled: true,
+            position: 'center',
+            autoHide: true,
+            autoHideDelay: 2000,
+            pauseOnLightboxOnly: true
+          })
+          .build();
+        
+        quadTapInstances.youtube = mockQuadTap(settings);
+        document.getElementById('youtube-status').textContent = 'Status: QuadTap initialized with YouTube adapter';
+      } else {
+        document.getElementById('youtube-status').textContent = 'Status: YouTube player not ready';
+      }
+    });
+
+    document.getElementById('youtube-destroy').addEventListener('click', function() {
+      if (quadTapInstances.youtube) {
+        quadTapInstances.youtube.destroy();
+        quadTapInstances.youtube = null;
+        document.getElementById('youtube-status').textContent = 'Status: QuadTap destroyed';
+      }
+    });
+
+    document.getElementById('vimeo-init').addEventListener('click', function() {
+      if (typeof vimeoPlayer !== 'undefined') {
+        var adapter = VideoPlayerAdapter.forVimeo(vimeoPlayer, true);
+        
+        var settings = new SettingsBuilder()
+          .withContainer('vimeo-container')
+          .withVideoSelector('#vimeo-player')
+          .withDebug(true)
+          .withVideoPlayerAdapter(adapter)
+          .withVideoControls({
+            enabled: true,
+            position: 'center',
+            autoHide: true,
+            autoHideDelay: 2000,
+            pauseOnLightboxOnly: true
+          })
+          .build();
+        
+        quadTapInstances.vimeo = mockQuadTap(settings);
+        document.getElementById('vimeo-status').textContent = 'Status: QuadTap initialized with Vimeo adapter';
+      } else {
+        document.getElementById('vimeo-status').textContent = 'Status: Vimeo player not ready';
+      }
+    });
+
+    document.getElementById('vimeo-destroy').addEventListener('click', function() {
+      if (quadTapInstances.vimeo) {
+        quadTapInstances.vimeo.destroy();
+        quadTapInstances.vimeo = null;
+        document.getElementById('vimeo-status').textContent = 'Status: QuadTap destroyed';
+      }
+    });
+
+    document.getElementById('custom-init').addEventListener('click', function() {
+      var adapter = VideoPlayerAdapter.custom({
+        videoElement: customPlayer,
+        api: {
+          playMethod: (player) => player.play(),
+          pauseMethod: (player) => player.pause(),
+          seekMethod: (player, time) => player.seekTo(time),
+          getCurrentTimeMethod: (player) => player.getCurrentTime(),
+          getDurationMethod: (player) => player.getDuration(),
+          getVideoIdMethod: (player) => player.getVideoId()
+        },
+        debug: true
+      });
+      
+      var settings = new SettingsBuilder()
+        .withContainer('custom-container')
+        .withVideoSelector('#custom-player')
+        .withDebug(true)
+        .withVideoPlayerAdapter(adapter)
+        .withVideoControls({
+          enabled: true,
+          position: 'center',
+          autoHide: true,
+          autoHideDelay: 2000,
+          pauseOnLightboxOnly: true
+        })
+        .build();
+      
+      quadTapInstances.custom = mockQuadTap(settings);
+      document.getElementById('custom-status').textContent = 'Status: QuadTap initialized with custom adapter';
+    });
+
+    document.getElementById('custom-destroy').addEventListener('click', function() {
+      if (quadTapInstances.custom) {
+        quadTapInstances.custom.destroy();
+        quadTapInstances.custom = null;
+        document.getElementById('custom-status').textContent = 'Status: QuadTap destroyed';
+      }
+    });
+  </script>
+</body>
+</html>

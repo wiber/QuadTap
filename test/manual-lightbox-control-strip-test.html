@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Lightbox Control Strip Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #main-video-droppable {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      margin: 0 auto;
+      background-color: #000;
+    }
+    #main-video {
+      width: 100%;
+      height: 100%;
+    }
+    .test-buttons {
+      margin: 20px auto;
+      text-align: center;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+    .instructions {
+      max-width: 640px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">QuadTap Lightbox Control Strip Test</h1>
+  
+  <div class="instructions">
+    <h3>Test Instructions:</h3>
+    <ol>
+      <li>Click "Activate Overlay" to show the overlay</li>
+      <li>Click on the profile bubble to open the lightbox</li>
+      <li>Verify that the control strip in the lightbox shows:
+        <ul>
+          <li>Time display showing current time / duration</li>
+          <li>Rewind button (⏪)</li>
+          <li>Play/Pause button (▶️/⏸️)</li>
+          <li>Forward button (⏩)</li>
+          <li>Share button (📤)</li>
+          <li>Copy URL button (🔗)</li>
+        </ul>
+      </li>
+      <li>Test the play/pause button to ensure it works</li>
+      <li>Test the rewind and forward buttons</li>
+      <li>Close the lightbox and verify everything returns to normal</li>
+    </ol>
+  </div>
+  
+  <div id="main-video-droppable">
+    <video id="main-video" controls>
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  
+  <div class="test-buttons">
+    <button id="activate-overlay-btn">Activate Overlay</button>
+    <button id="open-lightbox-btn">Open Lightbox Directly</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+  
+  <script src="../dist/quad-tap.js"></script>
+  <script>
+    // Initialize QuadTap
+    const quadTap = new QuadTap({
+      containerId: "main-video-droppable",
+      videoSelector: "#main-video",
+      debug: true,
+      videoControls: {
+        enabled: true,
+        rewindTime: 30,
+        forwardTime: 30
+      }
+    });
+    
+    // Expose helper functions for testing
+    window.quadTap = quadTap;
+    window.quadTapInitialized = true;
+    
+    // Helper function to activate overlay
+    window.activateOverlay = function() {
+      const container = document.getElementById('main-video-droppable');
+      const rect = container.getBoundingClientRect();
+      
+      // Activate at center of container
+      const x = rect.width / 2;
+      const y = rect.height / 2;
+      
+      quadTap.activateOverlay(x, y);
+      return true;
+    };
+    
+    // Helper function to open lightbox
+    window.openLightBox = function() {
+      if (!quadTap.state.active) {
+        window.activateOverlay();
+      }
+      quadTap.openLightBox();
+      return true;
+    };
+    
+    // Button event listeners
+    document.getElementById('activate-overlay-btn').addEventListener('click', function() {
+      window.activateOverlay();
+    });
+    
+    document.getElementById('open-lightbox-btn').addEventListener('click', function() {
+      window.openLightBox();
+    });
+    
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      if (quadTap.state.active) {
+        quadTap.deactivateOverlay();
+      }
+      
+      if (document.querySelector('.td-modal.active')) {
+        quadTap.closeLightBox();
+      }
+    });
+    
+    // Start playing the video
+    document.addEventListener('DOMContentLoaded', function() {
+      const video = document.getElementById('main-video');
+      video.muted = true; // Ensure it can autoplay
+      video.play();
+    });
+  </script>
+</body>
+</html>

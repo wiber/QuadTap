@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Direct Lightbox Control Strip Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    #main-video-droppable {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      margin: 0 auto;
+      background-color: #000;
+    }
+    #main-video {
+      width: 100%;
+      height: 100%;
+    }
+    .test-buttons {
+      margin: 20px auto;
+      text-align: center;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 0 5px;
+      cursor: pointer;
+    }
+    .instructions {
+      max-width: 640px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+    }
+    .test-results {
+      max-width: 640px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #e8f5e9;
+      border-radius: 5px;
+      display: none;
+    }
+    .test-item {
+      margin: 5px 0;
+      padding: 5px;
+      border-radius: 3px;
+    }
+    .test-pass {
+      background-color: #c8e6c9;
+    }
+    .test-fail {
+      background-color: #ffcdd2;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">QuadTap Direct Lightbox Control Strip Test</h1>
+  
+  <div class="instructions">
+    <h3>Test Purpose:</h3>
+    <p>This test directly opens the lightbox and verifies that all control strip elements are present and functional, including:</p>
+    <ul>
+      <li>Time display showing current time / duration</li>
+      <li>Rewind button (⏪)</li>
+      <li>Play/Pause button (▶️/⏸️)</li>
+      <li>Forward button (⏩)</li>
+      <li>Share button (📤)</li>
+      <li>Copy URL button (🔗)</li>
+    </ul>
+  </div>
+  
+  <div id="main-video-droppable">
+    <video id="main-video" controls>
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  
+  <div class="test-buttons">
+    <button id="open-lightbox-btn">Open Lightbox</button>
+    <button id="run-tests-btn">Run Tests</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+  
+  <div id="test-results" class="test-results">
+    <h3>Test Results:</h3>
+    <div id="results-container"></div>
+  </div>
+  
+  <script src="../dist/quad-tap.js"></script>
+  <script>
+    // Initialize QuadTap
+    const quadTap = new QuadTap({
+      containerId: "main-video-droppable",
+      videoSelector: "#main-video",
+      debug: true,
+      videoControls: {
+        enabled: true,
+        rewindTime: 30,
+        forwardTime: 30
+      }
+    });
+    
+    // Expose helper functions for testing
+    window.quadTap = quadTap;
+    window.quadTapInitialized = true;
+    
+    // Helper function to activate overlay
+    window.activateOverlay = function() {
+      const container = document.getElementById('main-video-droppable');
+      const rect = container.getBoundingClientRect();
+      
+      // Activate at center of container
+      const x = rect.width / 2;
+      const y = rect.height / 2;
+      
+      quadTap.activateOverlay(x, y);
+      return true;
+    };
+    
+    // Helper function to open lightbox
+    window.openLightBox = function() {
+      if (!quadTap.state.active) {
+        window.activateOverlay();
+      }
+      quadTap.openLightBox();
+      return true;
+    };
+    
+    // Button event listeners
+    document.getElementById('open-lightbox-btn').addEventListener('click', function() {
+      window.openLightBox();
+    });
+    
+    document.getElementById('reset-btn').addEventListener('click', function() {
+      if (quadTap.state.active) {
+        quadTap.deactivateOverlay();
+      }
+      
+      if (document.querySelector('.td-modal.active')) {
+        quadTap.closeLightBox();
+      }
+      
+      document.getElementById('test-results').style.display = 'none';
+    });
+    
+    // Run tests
+    document.getElementById('run-tests-btn').addEventListener('click', function() {
+      // Open lightbox if not already open
+      if (!document.querySelector('.td-modal.active')) {
+        window.openLightBox();
+      }
+      
+      // Wait a moment for everything to initialize
+      setTimeout(runTests, 500);
+    });
+    
+    function runTests() {
+      const results = [];
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
+      
+      // Test 1: Verify lightbox is open
+      const lightboxOpen = document.querySelector('.td-modal.active') !== null;
+      results.push({
+        name: 'Lightbox is open',
+        pass: lightboxOpen
+      });
+      
+      // Test 2: Verify control strip container exists
+      const controlStripContainer = document.querySelector('.td-lightbox-controls');
+      results.push({
+        name: 'Control strip container exists',
+        pass: controlStripContainer !== null
+      });
+      
+      // Test 3: Verify time display exists
+      const timeDisplay = document.querySelector('.td-video-info');
+      const timeDisplayExists = timeDisplay !== null;
+      const timeDisplayHasContent = timeDisplayExists && timeDisplay.textContent.match(/\d+:\d{2} \/ \d+:\d{2}/);
+      results.push({
+        name: 'Time display exists and shows time',
+        pass: timeDisplayExists && timeDisplayHasContent
+      });
+      
+      // Test 4: Verify all buttons exist
+      const controlButtons = document.querySelectorAll('.td-lightbox-controls .qt-control-button');
+      results.push({
+        name: 'Control strip has buttons',
+        pass: controlButtons.length >= 5
+      });
+      
+      // Test 5: Verify rewind button exists
+      const rewindButton = document.querySelector('.td-lightbox-controls .qt-rewind-button');
+      results.push({
+        name: 'Rewind button exists',
+        pass: rewindButton !== null
+      });
+      
+      // Test 6: Verify play/pause button exists
+      const playPauseButton = document.querySelector('.td-lightbox-controls .qt-play-pause-button');
+      results.push({
+        name: 'Play/Pause button exists',
+        pass: playPauseButton !== null
+      });
+      
+      // Test 7: Verify forward button exists
+      const forwardButton = document.querySelector('.td-lightbox-controls .qt-forward-button');
+      results.push({
+        name: 'Forward button exists',
+        pass: forwardButton !== null
+      });
+      
+      // Test 8: Verify share button exists
+      const shareButton = document.querySelector('.td-lightbox-controls .qt-share-button');
+      results.push({
+        name: 'Share button exists',
+        pass: shareButton !== null
+      });
+      
+      // Test 9: Verify copy URL button exists
+      const copyUrlButton = document.querySelector('.td-lightbox-controls .qt-copy-url-button');
+      results.push({
+        name: 'Copy URL button exists',
+        pass: copyUrlButton !== null
+      });
+      
+      // Test 10: Test play/pause functionality
+      const video = document.querySelector('#main-video');
+      const initialPlayState = !video.paused;
+      
+      // Click play/pause button if it exists
+      if (playPauseButton) {
+        playPauseButton.click();
+      }
+      
+      // Wait a moment for the action to take effect
+      setTimeout(() => {
+        const newPlayState = !video.paused;
+        results.push({
+          name: 'Play/Pause button toggles video playback',
+          pass: initialPlayState !== newPlayState
+        });
+        
+        // Display results
+        displayResults(results);
+      }, 500);
+    }
+    
+    function displayResults(results) {
+      const resultsContainer = document.getElementById('results-container');
+      resultsContainer.innerHTML = '';
+      
+      let allPassed = true;
+      
+      results.forEach(result => {
+        const resultItem = document.createElement('div');
+        resultItem.className = `test-item ${result.pass ? 'test-pass' : 'test-fail'}`;
+        resultItem.textContent = `${result.pass ? '✅' : '❌'} ${result.name}`;
+        resultsContainer.appendChild(resultItem);
+        
+        if (!result.pass) {
+          allPassed = false;
+        }
+      });
+      
+      // Add summary
+      const summary = document.createElement('div');
+      summary.className = `test-item ${allPassed ? 'test-pass' : 'test-fail'}`;
+      summary.style.fontWeight = 'bold';
+      summary.style.marginTop = '10px';
+      summary.textContent = allPassed ? 
+        '✅ All tests passed! The lightbox control strip is working correctly.' : 
+        '❌ Some tests failed. The lightbox control strip may not be fully functional.';
+      resultsContainer.appendChild(summary);
+      
+      // Show results
+      document.getElementById('test-results').style.display = 'block';
+    }
+    
+    // Start playing the video and automatically open lightbox and run tests
+    document.addEventListener('DOMContentLoaded', function() {
+      const video = document.getElementById('main-video');
+      video.muted = true; // Ensure it can autoplay
+      video.play();
+      
+      // Automatically open lightbox and run tests after video starts playing
+      setTimeout(function() {
+        document.getElementById('open-lightbox-btn').click();
+        
+        // Run tests after lightbox is open
+        setTimeout(function() {
+          document.getElementById('run-tests-btn').click();
+        }, 1000);
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

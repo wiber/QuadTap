@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple QuadTap Lightbox Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    #main-video-droppable {
+      position: relative;
+      width: 640px;
+      height: 360px;
+      background-color: #000;
+      margin: 0 auto;
+    }
+    
+    video {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .test-buttons {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 10px;
+    }
+    
+    button {
+      padding: 10px 15px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #e8f0fe;
+      border-radius: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Simple QuadTap Lightbox Test</h1>
+    
+    <div id="main-video-droppable">
+      <video id="main-video" controls autoplay muted loop>
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    
+    <div class="test-buttons">
+      <button id="activate-overlay">Activate Overlay</button>
+      <button id="open-lightbox">Open Lightbox</button>
+      <button id="close-lightbox">Close Lightbox</button>
+    </div>
+    
+    <div class="status" id="status">
+      Status: Ready
+    </div>
+  </div>
+
+  <script src="quad-tap.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if QuadTap is available
+      if (typeof QuadTap === 'undefined') {
+        console.error('QuadTap is not defined. Make sure the bundle is loaded correctly.');
+        document.getElementById('status').textContent = 'Status: Error - QuadTap not loaded';
+        return;
+      }
+      
+      console.log('QuadTap is available:', QuadTap);
+      
+      // Create QuadTap instance
+      const quadTap = new QuadTap({
+        containerId: 'main-video-droppable',
+        videoSelector: '#main-video',
+        debug: true,
+        videoControls: {
+          enabled: true,
+          pauseOnLightboxOnly: true,
+          showAllButtons: true
+        },
+        callbacks: {
+          onOverlayActivate: function(x, y) {
+            updateStatus('Overlay activated at ' + x + ', ' + y);
+          },
+          onThrowDownInitiate: function(quadrant, x, y) {
+            updateStatus('Lightbox opened. Quadrant: ' + quadrant);
+          },
+          onThrowDownConfirm: function(quadrant, x, y, videoInfo) {
+            updateStatus('Emoji selected in ' + quadrant + ' quadrant');
+          },
+          onThrowDownCancel: function(quadrant) {
+            updateStatus('Throw-down cancelled');
+          },
+          onVideoControl: function(action, time) {
+            updateStatus('Video control: ' + action + ' at time ' + time.toFixed(2));
+          }
+        }
+      });
+      
+      // Expose quadTap instance globally for testing
+      window.quadTap = quadTap;
+      
+      // Add button event listeners
+      document.getElementById('activate-overlay').addEventListener('click', function() {
+        const container = document.getElementById('main-video-droppable');
+        const rect = container.getBoundingClientRect();
+        const x = rect.width / 2;
+        const y = rect.height / 2;
+        quadTap.activateOverlay(x, y);
+        updateStatus('Overlay activated programmatically');
+      });
+      
+      document.getElementById('open-lightbox').addEventListener('click', function() {
+        quadTap.openLightBox();
+        updateStatus('Lightbox opened programmatically');
+      });
+      
+      document.getElementById('close-lightbox').addEventListener('click', function() {
+        quadTap.closeLightBox();
+        updateStatus('Lightbox closed programmatically');
+      });
+      
+      // Helper function to update status
+      function updateStatus(message) {
+        const statusElement = document.getElementById('status');
+        statusElement.textContent = 'Status: ' + message;
+      }
+      
+      updateStatus('QuadTap initialized');
+      
+      // Automatically activate overlay and open lightbox after a short delay
+      setTimeout(function() {
+        document.getElementById('activate-overlay').click();
+        setTimeout(function() {
+          document.getElementById('open-lightbox').click();
+        }, 500);
+      }, 1000);
+    });
+  </script>
+</body>
+</html>

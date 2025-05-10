@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Control Strip Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    video {
+      width: 100%;
+      display: block;
+    }
+    
+    .controls {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    button {
+      padding: 8px 16px;
+      margin-right: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .event-log {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .event-log h3 {
+      margin-top: 0;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #999;
+      font-size: 0.8em;
+    }
+    
+    .log-type {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    
+    .log-type.info {
+      color: #2196F3;
+    }
+    
+    .log-type.error {
+      color: #f44336;
+    }
+    
+    .log-type.warn {
+      color: #ff9800;
+    }
+    
+    .log-type.success {
+      color: #4CAF50;
+    }
+    
+    .coordinates-display {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 9999;
+    }
+    
+    /* Debug styles for control strip positioning */
+    .position-debug {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .position-debug h3 {
+      margin-top: 0;
+    }
+    
+    .position-info {
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+    
+    .position-value {
+      font-weight: bold;
+      color: #2196F3;
+    }
+    
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    
+    .grid-line-horizontal {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background-color: rgba(255, 0, 0, 0.3);
+    }
+    
+    .grid-line-vertical {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 1px;
+      background-color: rgba(255, 0, 0, 0.3);
+    }
+    
+    .grid-label {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      padding: 2px 5px;
+      font-size: 10px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Manual Control Strip Test</h1>
+    
+    <div class="video-container" id="main-video-droppable">
+      <video id="main-video" controls data-video-id="test-video-123">
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      
+      <!-- Grid overlay for debugging -->
+      <div class="grid-overlay" id="grid-overlay"></div>
+    </div>
+    
+    <div class="controls">
+      <button id="init-btn">Initialize QuadTap</button>
+      <button id="activate-btn">Activate Overlay</button>
+      <button id="destroy-btn">Destroy QuadTap</button>
+      <button id="toggle-grid-btn">Toggle Grid</button>
+      <button id="clear-log-btn">Clear Log</button>
+    </div>
+    
+    <div class="position-debug">
+      <h3>Control Strip Position</h3>
+      <div class="position-info">
+        Top: <span id="top-value" class="position-value">N/A</span>
+      </div>
+      <div class="position-info">
+        Left: <span id="left-value" class="position-value">N/A</span>
+      </div>
+      <div class="position-info">
+        Transform: <span id="transform-value" class="position-value">N/A</span>
+      </div>
+      <div class="position-info">
+        Actual Position (px): <span id="actual-position" class="position-value">N/A</span>
+      </div>
+      <div class="position-info">
+        Actual Position (%): <span id="actual-position-percent" class="position-value">N/A</span>
+      </div>
+    </div>
+    
+    <div class="event-log">
+      <h3>Event Log</h3>
+      <div id="log-container"></div>
+    </div>
+  </div>
+  
+  <div class="coordinates-display" id="coordinates-display">X: 0, Y: 0</div>
+  
+  <script src="quad-tap.js"></script>
+  <script>
+    // Wait for QuadTap to be available
+    window.addEventListener('load', function() {
+      if (typeof QuadTap === 'undefined') {
+        console.error('QuadTap is not defined. Make sure the bundle is loaded correctly.');
+      } else {
+        console.log('QuadTap is available:', QuadTap);
+      }
+    });
+    
+    // Initialize QuadTap
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize buttons
+      const initBtn = document.getElementById('init-btn');
+      const activateBtn = document.getElementById('activate-btn');
+      const destroyBtn = document.getElementById('destroy-btn');
+      const toggleGridBtn = document.getElementById('toggle-grid-btn');
+      const clearLogBtn = document.getElementById('clear-log-btn');
+      const logContainer = document.getElementById('log-container');
+      const coordinatesDisplay = document.getElementById('coordinates-display');
+      const videoElement = document.getElementById('main-video');
+      const gridOverlay = document.getElementById('grid-overlay');
+      
+      // Position debug elements
+      const topValue = document.getElementById('top-value');
+      const leftValue = document.getElementById('left-value');
+      const transformValue = document.getElementById('transform-value');
+      const actualPosition = document.getElementById('actual-position');
+      const actualPositionPercent = document.getElementById('actual-position-percent');
+      
+      // Track video state
+      let videoState = {
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        volume: 1
+      };
+      
+      // Update video state
+      function updateVideoState() {
+        videoState.isPlaying = !videoElement.paused;
+        videoState.currentTime = videoElement.currentTime;
+        videoState.duration = videoElement.duration;
+        videoState.volume = videoElement.volume;
+      }
+      
+      // Add video event listeners
+      videoElement.addEventListener('play', updateVideoState);
+      videoElement.addEventListener('pause', updateVideoState);
+      videoElement.addEventListener('timeupdate', function() {
+        videoState.currentTime = videoElement.currentTime;
+      });
+      videoElement.addEventListener('volumechange', function() {
+        videoState.volume = videoElement.volume;
+      });
+      
+      // Track mouse coordinates
+      document.addEventListener('mousemove', function(evt) {
+        coordinatesDisplay.textContent = `X: ${evt.clientX}, Y: ${evt.clientY}`;
+      });
+      
+      // Override console.log to capture QuadTap logs
+      const originalConsoleLog = console.log;
+      console.log = function() {
+        // Call original console.log
+        originalConsoleLog.apply(console, arguments);
+        
+        // Check if this is a QuadTap log
+        if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].includes('[QuadTap]')) {
+          // Add to log container
+          addLogEntry('info', arguments[0], arguments[1] || '');
+        }
+      };
+      
+      // Add log entry
+      function addLogEntry(type, message, data) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const time = new Date().toLocaleTimeString();
+        const logTime = document.createElement('span');
+        logTime.className = 'log-time';
+        logTime.textContent = `[${time}] `;
+        
+        const logType = document.createElement('span');
+        logType.className = `log-type ${type}`;
+        logType.textContent = type.toUpperCase();
+        
+        const logMessage = document.createElement('span');
+        logMessage.className = 'log-message';
+        logMessage.textContent = ` ${message}`;
+        
+        logEntry.appendChild(logTime);
+        logEntry.appendChild(logType);
+        logEntry.appendChild(logMessage);
+        
+        if (data) {
+          const logData = document.createElement('div');
+          logData.className = 'log-data';
+          logData.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+          logEntry.appendChild(logData);
+        }
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+      
+      // Create grid overlay
+      function createGridOverlay() {
+        // Clear existing grid
+        gridOverlay.innerHTML = '';
+        
+        const container = document.getElementById('main-video-droppable');
+        const rect = container.getBoundingClientRect();
+        
+        // Create horizontal lines at 10% intervals
+        for (let i = 0; i <= 100; i += 10) {
+          const line = document.createElement('div');
+          line.className = 'grid-line-horizontal';
+          line.style.top = `${i}%`;
+          
+          const label = document.createElement('div');
+          label.className = 'grid-label';
+          label.textContent = `${i}%`;
+          label.style.top = `${i}%`;
+          label.style.left = '5px';
+          label.style.transform = 'translateY(-50%)';
+          
+          gridOverlay.appendChild(line);
+          gridOverlay.appendChild(label);
+        }
+        
+        // Create vertical lines at 10% intervals
+        for (let i = 0; i <= 100; i += 10) {
+          const line = document.createElement('div');
+          line.className = 'grid-line-vertical';
+          line.style.left = `${i}%`;
+          
+          const label = document.createElement('div');
+          label.className = 'grid-label';
+          label.textContent = `${i}%`;
+          label.style.left = `${i}%`;
+          label.style.top = '5px';
+          label.style.transform = 'translateX(-50%)';
+          
+          gridOverlay.appendChild(line);
+          gridOverlay.appendChild(label);
+        }
+        
+        // Add special line for 50% vertical center
+        const specialLine = document.createElement('div');
+        specialLine.className = 'grid-line-horizontal';
+        specialLine.style.top = '50%';
+        specialLine.style.backgroundColor = 'rgba(0, 255, 0, 0.5)';
+        specialLine.style.height = '2px';
+        
+        const specialLabel = document.createElement('div');
+        specialLabel.className = 'grid-label';
+        specialLabel.textContent = '50% center';
+        specialLabel.style.top = '50%';
+        specialLabel.style.right = '5px';
+        specialLabel.style.transform = 'translateY(-50%)';
+        specialLabel.style.backgroundColor = 'rgba(0, 255, 0, 0.7)';
+        
+        gridOverlay.appendChild(specialLine);
+        gridOverlay.appendChild(specialLabel);
+      }
+      
+      // Toggle grid visibility
+      function toggleGrid() {
+        if (gridOverlay.style.display === 'none') {
+          gridOverlay.style.display = 'block';
+          createGridOverlay();
+          addLogEntry('info', 'Grid overlay enabled');
+        } else {
+          gridOverlay.style.display = 'none';
+          addLogEntry('info', 'Grid overlay disabled');
+        }
+      }
+      
+      // Update control strip position info
+      function updatePositionInfo() {
+        const controlStrip = document.querySelector('.quad-tap-controls');
+        if (!controlStrip) {
+          topValue.textContent = 'N/A';
+          leftValue.textContent = 'N/A';
+          transformValue.textContent = 'N/A';
+          actualPosition.textContent = 'N/A';
+          actualPositionPercent.textContent = 'N/A';
+          return;
+        }
+        
+        const style = window.getComputedStyle(controlStrip);
+        topValue.textContent = style.top;
+        leftValue.textContent = style.left;
+        transformValue.textContent = style.transform;
+        
+        const rect = controlStrip.getBoundingClientRect();
+        const container = document.getElementById('main-video-droppable');
+        const containerRect = container.getBoundingClientRect();
+        
+        const centerX = rect.left + rect.width / 2 - containerRect.left;
+        const centerY = rect.top + rect.height / 2 - containerRect.top;
+        
+        actualPosition.textContent = `X: ${centerX.toFixed(2)}px, Y: ${centerY.toFixed(2)}px`;
+        
+        const centerXPercent = (centerX / containerRect.width) * 100;
+        const centerYPercent = (centerY / containerRect.height) * 100;
+        
+        actualPositionPercent.textContent = `X: ${centerXPercent.toFixed(2)}%, Y: ${centerYPercent.toFixed(2)}%`;
+      }
+      
+      // Initialize QuadTap
+      let quadTap = null;
+      window.quadTapDebug = true;
+      
+      initBtn.addEventListener('click', function() {
+        if (!quadTap) {
+          addLogEntry('info', 'Initializing QuadTap...');
+          
+          // Check if QuadTap is available
+          if (typeof QuadTap === 'undefined') {
+            addLogEntry('error', 'QuadTap is not defined. Make sure the bundle is loaded.');
+            return;
+          }
+          
+          // Initialize QuadTap with expanded configuration
+          quadTap = new QuadTap({
+            containerId: 'main-video-droppable',
+            videoSelector: '#main-video',
+            autoCancelTimeout: 0, // Disable auto-cancel for testing
+            debug: true,
+            // Video control configuration
+            videoControls: {
+              enabled: true,
+              rewindTime: 30,
+              forwardTime: 30
+            },
+            callbacks: {
+              onOverlayActivate: function(x, y) {
+                addLogEntry('success', 'Overlay activated', { x, y });
+                setTimeout(updatePositionInfo, 100);
+              }
+            }
+          });
+          
+          addLogEntry('success', 'QuadTap initialized');
+          
+          // Set up position info update interval
+          setInterval(updatePositionInfo, 500);
+        } else {
+          addLogEntry('warn', 'QuadTap is already initialized');
+        }
+      });
+      
+      // Activate overlay
+      activateBtn.addEventListener('click', function() {
+        if (!quadTap) {
+          addLogEntry('error', 'QuadTap is not initialized');
+          return;
+        }
+        
+        // Get the center of the video
+        const container = document.getElementById('main-video-droppable');
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        // Call the activateOverlay method directly
+        if (typeof quadTap.activateOverlay === 'function') {
+          quadTap.activateOverlay(centerX, centerY);
+          addLogEntry('info', 'Overlay activated manually', { x: centerX, y: centerY });
+        } else {
+          addLogEntry('error', 'activateOverlay method not found');
+        }
+      });
+      
+      // Destroy QuadTap
+      destroyBtn.addEventListener('click', function() {
+        if (quadTap) {
+          quadTap.destroy();
+          quadTap = null;
+          addLogEntry('info', 'QuadTap destroyed');
+        } else {
+          addLogEntry('warn', 'QuadTap is not initialized');
+        }
+      });
+      
+      // Toggle grid
+      toggleGridBtn.addEventListener('click', toggleGrid);
+      
+      // Clear log
+      clearLogBtn.addEventListener('click', function() {
+        logContainer.innerHTML = '';
+        addLogEntry('info', 'Log cleared');
+      });
+      
+      // Initialize grid (hidden by default)
+      gridOverlay.style.display = 'none';
+      
+      // Add initial log entry
+      addLogEntry('info', 'Test page loaded');
+    });
+  </script>
+</body>
+</html>

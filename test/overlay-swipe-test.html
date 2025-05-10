@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Overlay Swipe Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    video {
+      width: 100%;
+      display: block;
+    }
+    
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      padding: 15px;
+      background-color: #f0f0f0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    button {
+      padding: 15px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    
+    .event-log {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .event-log h3 {
+      margin-top: 0;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .swipe-direction {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #e9f7ef;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .swipe-direction h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    
+    .swipe-indicator {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2ecc71;
+    }
+    
+    .swipe-instructions {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f0f8ff;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .swipe-instructions h3 {
+      margin-top: 0;
+    }
+    
+    .swipe-instructions ul {
+      padding-left: 20px;
+    }
+    
+    .swipe-instructions li {
+      margin-bottom: 10px;
+    }
+    
+    .swipe-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 20px;
+      margin-top: 20px;
+    }
+    
+    .swipe-action {
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .swipe-action h4 {
+      margin-top: 0;
+      color: #2ecc71;
+    }
+    
+    .swipe-action p {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>QuadTap Overlay Swipe Test</h1>
+    <p>This page tests the swipe functionality on the overlay in all four directions (up, right, down, left).</p>
+    
+    <div class="swipe-instructions">
+      <h3>How to Test:</h3>
+      <ul>
+        <li><strong>Step 1:</strong> Click the "Activate Overlay" button to simulate the first tap.</li>
+        <li><strong>Step 2:</strong> Swipe on the video in any direction (up, right, down, left).</li>
+        <li><strong>Step 3:</strong> Observe the detected swipe direction in the indicator below the video.</li>
+        <li><strong>Step 4:</strong> Check the event log for detailed information about the swipe event.</li>
+        <li><strong>Step 5:</strong> Note that vertical swipes (up/down) will dismiss the overlay, while horizontal swipes (left/right) will trigger custom actions.</li>
+      </ul>
+    </div>
+    
+    <!-- Video container with the default ID that QuadTap looks for -->
+    <div class="video-container" id="main-video-droppable">
+      <video id="main-video" controls data-video-id="test-video-123">
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    
+    <div class="swipe-direction">
+      <h3>Detected Swipe Direction:</h3>
+      <div class="swipe-indicator" id="swipe-indicator">None</div>
+    </div>
+    
+    <div class="swipe-actions">
+      <div class="swipe-action">
+        <h4>Vertical Swipes (Up/Down)</h4>
+        <p>Dismisses the overlay and navigates to the previous/next video in the feed.</p>
+      </div>
+      <div class="swipe-action">
+        <h4>Horizontal Swipes (Left/Right)</h4>
+        <p>Triggers custom actions defined by the host application (e.g., seeking, changing volume).</p>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="activate-overlay">Activate Overlay</button>
+      <button id="reset-test">Reset Test</button>
+    </div>
+    
+    <div class="event-log">
+      <h3>Event Log</h3>
+      <div id="log-container"></div>
+    </div>
+  </div>
+
+  <!-- Load the QuadTap script -->
+  <script src="quad-tap.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const logContainer = document.getElementById('log-container');
+      const swipeIndicator = document.getElementById('swipe-indicator');
+      const video = document.getElementById('main-video');
+      
+      // Add log entry function
+      function addLogEntry(message) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const time = new Date().toLocaleTimeString();
+        logEntry.textContent = `[${time}] ${message}`;
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+      
+      // Override console.log to capture QuadTap logs
+      const originalConsoleLog = console.log;
+      console.log = function() {
+        // Call original console.log
+        originalConsoleLog.apply(console, arguments);
+        
+        // Check if this is a QuadTap log
+        if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].includes('[QuadTap]')) {
+          // Add to log container
+          addLogEntry(arguments[0]);
+        }
+      };
+      
+      // Wait for auto-initialization to complete
+      setTimeout(() => {
+        // Use the global quadTap instance created by auto-initialization
+        const quadTap = window.quadTap;
+        
+        if (!quadTap) {
+          addLogEntry('ERROR: QuadTap instance not found. Auto-initialization may have failed.');
+          return;
+        }
+        
+        addLogEntry('Using auto-initialized QuadTap instance');
+        
+        // Add custom swipe detection
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchEndX = 0;
+        let touchEndY = 0;
+        let overlayActive = false;
+        
+        // Add event listeners for video
+        video.addEventListener('play', () => {
+          addLogEntry('Video started playing');
+        });
+        
+        video.addEventListener('pause', () => {
+          addLogEntry('Video paused');
+        });
+        
+        // Add button event listeners
+        document.getElementById('activate-overlay').addEventListener('click', () => {
+          const container = document.getElementById('main-video-droppable');
+          const rect = container.getBoundingClientRect();
+          const x = rect.width / 2;
+          const y = rect.height / 2;
+          
+          addLogEntry(`Activating overlay at position (${x}, ${y})`);
+          quadTap.activateOverlay(x, y);
+          overlayActive = true;
+        });
+        
+        document.getElementById('reset-test').addEventListener('click', () => {
+          addLogEntry('Resetting test');
+          if (overlayActive) {
+            quadTap.deactivateOverlay();
+            overlayActive = false;
+          }
+          swipeIndicator.textContent = 'None';
+        });
+        
+        // Add touch event listeners for swipe detection
+        const container = document.getElementById('main-video-droppable');
+        
+        container.addEventListener('touchstart', function(e) {
+          if (!overlayActive) return;
+          
+          touchStartX = e.changedTouches[0].screenX;
+          touchStartY = e.changedTouches[0].screenY;
+          
+          addLogEntry(`Touch start at (${touchStartX}, ${touchStartY})`);
+        }, false);
+        
+        container.addEventListener('touchend', function(e) {
+          if (!overlayActive) return;
+          
+          touchEndX = e.changedTouches[0].screenX;
+          touchEndY = e.changedTouches[0].screenY;
+          
+          addLogEntry(`Touch end at (${touchEndX}, ${touchEndY})`);
+          
+          handleSwipe();
+        }, false);
+        
+        // Add mouse event listeners for desktop testing
+        let mouseDown = false;
+        
+        container.addEventListener('mousedown', function(e) {
+          if (!overlayActive) return;
+          
+          mouseDown = true;
+          touchStartX = e.screenX;
+          touchStartY = e.screenY;
+          
+          addLogEntry(`Mouse down at (${touchStartX}, ${touchStartY})`);
+        }, false);
+        
+        container.addEventListener('mouseup', function(e) {
+          if (!overlayActive || !mouseDown) return;
+          
+          mouseDown = false;
+          touchEndX = e.screenX;
+          touchEndY = e.screenY;
+          
+          addLogEntry(`Mouse up at (${touchEndX}, ${touchEndY})`);
+          
+          handleSwipe();
+        }, false);
+        
+        // Handle swipe function
+        function handleSwipe() {
+          const diffX = touchEndX - touchStartX;
+          const diffY = touchEndY - touchStartY;
+          
+          // Check if it's a swipe (minimum distance)
+          const minDistance = 50;
+          if (Math.abs(diffX) < minDistance && Math.abs(diffY) < minDistance) {
+            addLogEntry('Not a swipe - distance too small');
+            return;
+          }
+          
+          let swipeDirection = '';
+          
+          // Determine swipe direction
+          if (Math.abs(diffX) > Math.abs(diffY)) {
+            // Horizontal swipe
+            swipeDirection = diffX > 0 ? 'right' : 'left';
+          } else {
+            // Vertical swipe
+            swipeDirection = diffY > 0 ? 'down' : 'up';
+          }
+          
+          addLogEntry(`Swipe detected: ${swipeDirection}`);
+          swipeIndicator.textContent = swipeDirection.toUpperCase();
+          
+          // Handle swipe based on direction
+          switch (swipeDirection) {
+            case 'up':
+              addLogEntry('Vertical swipe up - navigating to previous video');
+              // Custom action for up swipe - should not affect overlay status
+              // Just simulate navigation to previous video
+              addLogEntry('Would navigate to previous video in a real implementation');
+              
+              // Deactivate overlay on vertical swipe (as per spec)
+              quadTap.deactivateOverlay({reason: 'swipe'});
+              overlayActive = false;
+              addLogEntry('Overlay deactivated due to vertical swipe up');
+              return false; // Prevent default behavior
+              
+            case 'down':
+              addLogEntry('Vertical swipe down - navigating to next video');
+              // Custom action for down swipe - should not affect overlay status
+              // Just simulate navigation to next video
+              addLogEntry('Would navigate to next video in a real implementation');
+              
+              // Deactivate overlay on vertical swipe (as per spec)
+              quadTap.deactivateOverlay({reason: 'swipe'});
+              overlayActive = false;
+              addLogEntry('Overlay deactivated due to vertical swipe down');
+              return false; // Prevent default behavior
+              
+            case 'left':
+              addLogEntry('Horizontal swipe left - custom action');
+              // Custom action for left swipe (e.g., decrease volume)
+              video.volume = Math.max(0, video.volume - 0.2);
+              addLogEntry(`Volume set to ${(video.volume * 100).toFixed(0)}%`);
+              
+              // Horizontal swipes should NOT deactivate the overlay
+              addLogEntry('Horizontal swipe left - overlay remains active');
+              return false; // Prevent default behavior
+              
+            case 'right':
+              addLogEntry('Horizontal swipe right - custom action');
+              // Custom action for right swipe (e.g., increase volume)
+              video.volume = Math.min(1, video.volume + 0.2);
+              addLogEntry(`Volume set to ${(video.volume * 100).toFixed(0)}%`);
+              
+              // Horizontal swipes should NOT deactivate the overlay
+              addLogEntry('Horizontal swipe right - overlay remains active');
+              return false; // Prevent default behavior
+          }
+        }
+        
+        // Log initialization
+        addLogEntry('Overlay swipe test initialized');
+      }, 1000); // Wait 1 second for auto-initialization to complete
+    });
+  </script>
+</body>
+</html>
