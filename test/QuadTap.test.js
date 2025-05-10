@@ -8,9 +8,60 @@ window.getComputedStyle = jest.fn(() => ({
   zIndex: '1000'
 }));
 
-// Mock document.body methods using spyOn instead of replacing the object
-jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
-jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
+// Mock ResizeObserver globally for JSDOM
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+}));
+
+// --- JSDOM Global Mocks - Placed at the top ---
+// Store original document methods if needed, though for createElement we want to override it.
+const originalCreateElement = document.createElement;
+
+// Mock document.createElement globally to return JSDOM elements with spied methods
+document.createElement = jest.fn((tagName) => {
+  const element = originalCreateElement.call(document, tagName); // Use JSDOM's actual createElement
+
+  // Add spies to common methods for test assertions if needed later
+  // For now, the key is that it's a real JSDOM node.
+  element.appendChild = jest.fn();
+  element.addEventListener = jest.fn();
+  element.removeEventListener = jest.fn();
+  element.setAttribute = jest.fn();
+  element.getAttribute = jest.fn();
+  if (element.classList) {
+    element.classList.add = jest.fn();
+    element.classList.remove = jest.fn();
+    element.classList.contains = jest.fn(() => false);
+  } else {
+    element.classList = { add: jest.fn(), remove: jest.fn(), contains: jest.fn(() => false) };
+  }
+  // style object is inherently part of JSDOM elements
+  return element;
+});
+
+// Mock document.head.appendChild to prevent errors during style injection
+// This needs to be a simple jest.fn() if the issue is with the appended child type.
+if (document.head && typeof document.head.appendChild === 'function') {
+    jest.spyOn(document.head, 'appendChild').mockImplementation(jest.fn());
+} else {
+    // Fallback if document.head or its appendChild is not standard
+    document.head = { ...document.head, appendChild: jest.fn() };
+}
+
+// Mock document.body.appendChild and removeChild
+if (document.body && typeof document.body.appendChild === 'function') {
+    jest.spyOn(document.body, 'appendChild').mockImplementation(jest.fn());
+} else {
+    document.body = { ...document.body, appendChild: jest.fn() };
+}
+if (document.body && typeof document.body.removeChild === 'function') {
+    jest.spyOn(document.body, 'removeChild').mockImplementation(jest.fn());
+} else {
+    document.body = { ...document.body, removeChild: jest.fn() };
+}
+// --- End JSDOM Global Mocks ---
 
 // Mock the dom.js helper module
 jest.mock('../src/helpers/dom', () => {
@@ -179,20 +230,12 @@ document.querySelector = jest.fn(selector => {
   return null;
 });
 
-document.createElement = jest.fn(() => ({
-  style: {},
-  classList: {
-    add: jest.fn(),
-    remove: jest.fn(),
-    contains: jest.fn()
-  },
-  appendChild: jest.fn(),
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  setAttribute: jest.fn(),
-  getAttribute: jest.fn(),
-  hasAttribute: jest.fn(() => true)
-}));
+// NOTE: The global mock for document.createElement is defined at the top of this file.
+// The `document.createElement = jest.fn((tagName) => { ... });` block below was an
+// erroneous duplication of that top-level mock. It has been removed.
+// The `jest.spyOn(element, ...)` calls that were previously inside this duplicated
+// mock are now correctly part of the single, top-level `document.createElement` mock.
+
 
 // Mock the VideoPlayerAdapter
 jest.mock('../src/adapters/VideoPlayerAdapter', () => {

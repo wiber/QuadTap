@@ -2961,7 +2961,59 @@ t = () => ( () => {
     }
     ), 2e3));
     const M = P;
-    return e.default.SettingsBuilder.VideoPlayerAdapter.Coordinates
+    // QuadTap MOD: Attach SettingsBuilder to the main export if needed for external access.
+    // And ensure VideoPlayerAdapter and Coordinates are similarly available if they are part of the public API.
+    // For now, the primary export is the QuadTap class (M).
+    // The original return 'e.default.SettingsBuilder.VideoPlayerAdapter.Coordinates' seemed to be an issue.
+    // Let's return the main module object 'e' which contains the default export.
+    // Or more simply, return M (P, the QuadTap class) directly as the default export.
+    // The UMD wrapper handles assigning t() to module.exports etc.
+    // So, what t() returns becomes the module's value.
+    // The tests import QuadTap from '../src/QuadTap', expecting QuadTap to be the class P.
+    
+    // Let's ensure SettingsBuilder is a static property of QuadTap (P/M)
+    // And VideoPlayerAdapter and Coordinates are properties of SettingsBuilder, if that's the intended structure.
+    // However, VideoPlayerAdapter and Coordinates are not defined as top-level entities in this bundle.
+    // They are mocked in tests, implying they might be separate modules in the source.
+
+    // The simplest change to make the test pass without breaking the library's intended structure
+    // is to ensure that the path e.default.SettingsBuilder.VideoPlayerAdapter is valid.
+    // e.default is P. So we need P.SettingsBuilder.VideoPlayerAdapter.
+    // P.SettingsBuilder should be D.
+    M.SettingsBuilder = D;
+
+    // VideoPlayerAdapter and Coordinates are not defined in this scope.
+    // The error is likely that D (SettingsBuilder) does not have a VideoPlayerAdapter property.
+    // Let's assume VideoPlayerAdapter and Coordinates are meant to be attached to SettingsBuilder for export.
+    // Since they are not defined here, we can't attach them.
+    // The original line `return e.default.SettingsBuilder.VideoPlayerAdapter.Coordinates`
+    // suggests that this specific, deeply nested object is the *only* thing this module exports,
+    // which is highly unlikely for a library.
+    // The UMD wrapper `module.exports = t()` means the result of `t()` is the export.
+    // It should be the main QuadTap class `M`.
+    // The error might be that `e.default.SettingsBuilder` (i.e. `P.SettingsBuilder`) is undefined
+    // when `VideoPlayerAdapter` is accessed on it.
+
+    // Let's try returning M, and ensure M has SettingsBuilder.
+    // The test `QuadTap.test.js` imports `SettingsBuilder from '../src/SettingsBuilder';`
+    // and `VideoPlayerAdapter from '../src/adapters/VideoPlayerAdapter';`
+    // This means they are separate modules in the source, and the bundler might be confused.
+
+    // The error is in src/QuadTap.js itself, not the test.
+    // The line `return e.default.SettingsBuilder.VideoPlayerAdapter.Coordinates` is problematic.
+    // `e.default` is `P`. `P.SettingsBuilder` needs to be `D`.
+    // Then `D.VideoPlayerAdapter.Coordinates` needs to be valid.
+    // Since `VideoPlayerAdapter` and `Coordinates` are not defined in this file,
+    // this structure cannot be formed here.
+
+    // The most robust fix is to change what the IIFE returns. It should return the main class `M`.
+    // Any static properties like SettingsBuilder should be attached to `M`.
+    M.SettingsBuilder = D; // Attach SettingsBuilder class D as a static property of QuadTap class M (P)
+    
+    // The original return value 'e.default.SettingsBuilder.VideoPlayerAdapter.Coordinates'
+    // is likely an artifact or misconfiguration of the bundling process.
+    // The module should export the QuadTap class primarily.
+    return M; // Return the main QuadTap class.
 }
 )(),
 "object" == typeof exports && "object" == typeof module ? module.exports = t() : "function" == typeof define && define.amd ? define("QuadTap", [], t) : "object" == typeof exports ? exports.QuadTap = t() : this.QuadTap = t();
