@@ -1810,6 +1810,47 @@ t = () => ( () => {
             value: function() {
                 var t = this;
                 this.elements.video = document.querySelector(this.config.videoSelector);
+                
+                // Detect mobile devices simply
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+                
+                // If on mobile, prevent native fullscreen
+                if (isMobile && this.elements.video) {
+                    // Prevent native fullscreen on iOS/Safari
+                    this.elements.video.addEventListener('webkitbeginfullscreen', function(e) {
+                        if (e.preventDefault) e.preventDefault();
+                        return false;
+                    });
+                    
+                    // Disable native fullscreen attributes
+                    this.elements.video.setAttribute('playsinline', '');
+                    this.elements.video.setAttribute('webkit-playsinline', '');
+                    
+                    // Find and disable any fullscreen buttons in the video player
+                    setTimeout(function() {
+                        try {
+                            // Find common fullscreen button selectors
+                            var fullscreenButtons = document.querySelectorAll(
+                                '.vjs-fullscreen-control, .fullscreen-button, [data-fullscreen], .ytp-fullscreen-button'
+                            );
+                            fullscreenButtons.forEach(function(btn) {
+                                // Either hide or disable the button
+                                if (btn.style) {
+                                    btn.style.display = 'none';
+                                }
+                                // Add click interceptor
+                                btn.addEventListener('click', function(e) {
+                                    if (e.preventDefault) e.preventDefault();
+                                    e.stopPropagation();
+                                    return false;
+                                });
+                            });
+                        } catch (err) {
+                            t.log("Error disabling fullscreen buttons", err);
+                        }
+                    }, 500); // Delay to ensure video player is fully initialized
+                }
+                
                 var e = function(e) {
                     if (e.preventDefault(),
                     e.stopPropagation(),
@@ -1828,6 +1869,7 @@ t = () => ( () => {
                             t.activateOverlay(o, n)
                         }
                 };
+                
                 this.elements.container.addEventListener("click", e),
                 this.elements.container.addEventListener("touchend", e);
                 var o = function(e) {
