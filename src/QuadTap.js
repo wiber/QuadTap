@@ -210,42 +210,41 @@ t = () => ( () => {
             }
             ))
         }
-        function C(t, e) {
-            function o(i, a, r, s) {
-                var d = h(t[i], t, a);
-                if ("throw" !== d.type) {
-                    var c = d.arg
-                      , u = c.value;
-                    return u && "object" == l(u) && n.call(u, "__await") ? e.resolve(u.__await).then((function(t) {
-                        o("next", t, r, s)
-                    }
-                    ), (function(t) {
-                        o("throw", t, r, s)
-                    }
-                    )) : e.resolve(u).then((function(t) {
-                        c.value = t,
-                        r(c)
-                    }
-                    ), (function(t) {
-                        return o("throw", t, r, s)
-                    }
-                    ))
-                }
-                s(d.arg)
-            }
-            var i;
-            c(this, "_invoke", (function(t, n) {
-                function a() {
-                    return new e((function(e, i) {
-                        o(t, n, e, i)
-                    }
-                    ))
-                }
-                return i = i ? i.then(a, a) : a()
-            }
-            ), !0)
+        function C(t, e, o) {
+            var n = document.createElement("button");
+            return w(n, b),
+            n.textContent = t,
+            n.setAttribute("aria-label", e),
+            
+            // Add mouse events
+            n.addEventListener("mouseenter", (function() {
+                w(n, v)
+            })),
+            n.addEventListener("mouseleave", (function() {
+                n.style.backgroundColor = ""
+            })),
+            n.addEventListener("click", function(e) {
+                e.preventDefault();
+                o(e);
+            }),
+            
+            // Add touch events for mobile
+            n.addEventListener("touchstart", function(e) {
+                e.preventDefault(); // Prevent default touch behavior
+                w(n, v); // Apply hover style on touch
+            }),
+            n.addEventListener("touchend", function(e) {
+                e.preventDefault(); // Prevent default touch behavior
+                n.style.backgroundColor = ""; // Reset style
+                o(e); // Call the original handler
+            }),
+            n.addEventListener("touchcancel", function(e) {
+                n.style.backgroundColor = ""; // Reset style on touch cancel
+            }),
+            
+            n
         }
-        function j(e, o) {
+        function j(t) {
             var n = o.method
               , i = e.i[n];
             if (i === t)
@@ -714,11 +713,27 @@ t = () => ( () => {
         j.appendChild(q),
         (v || x) && (j.appendChild(P),
         j.appendChild(O)),
+        
+        // Add click event handler to stop propagation
         j.addEventListener("click", (function(t) {
             t.stopPropagation(),
             p && console.log("[QuadTap] Control strip clicked, propagation stopped")
-        }
-        )),
+        })),
+        
+        // Add touch event handlers for mobile
+        j.addEventListener("touchstart", function(t) {
+            t.stopPropagation();
+            j.style.opacity = "1";
+            p && console.log("[QuadTap] Control strip touch started, propagation stopped");
+        }),
+        j.addEventListener("touchend", function(t) {
+            t.stopPropagation();
+            p && console.log("[QuadTap] Control strip touch ended, propagation stopped");
+        }),
+        j.addEventListener("touchmove", function(t) {
+            t.stopPropagation();
+        }),
+        
         e.appendChild(j),
         !x) {
             var z, L = function() {
@@ -764,13 +779,29 @@ t = () => ( () => {
         n.setAttribute("aria-label", e),
         n.addEventListener("mouseenter", (function() {
             w(n, v)
-        }
-        )),
+        })),
         n.addEventListener("mouseleave", (function() {
             n.style.backgroundColor = ""
-        }
-        )),
-        n.addEventListener("click", o),
+        })),
+        n.addEventListener("click", function(e) {
+            e.preventDefault();
+            o(e);
+        }),
+        
+        // Add touch events for mobile
+        n.addEventListener("touchstart", function(e) {
+            e.preventDefault(); // Prevent default touch behavior
+            w(n, v); // Apply hover style on touch
+        }),
+        n.addEventListener("touchend", function(e) {
+            e.preventDefault(); // Prevent default touch behavior
+            n.style.backgroundColor = ""; // Reset style
+            o(e); // Call the original handler
+        }),
+        n.addEventListener("touchcancel", function(e) {
+            n.style.backgroundColor = ""; // Reset style on touch cancel
+        }),
+        
         n
     }
     function j(t, e) {
