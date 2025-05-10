@@ -1,4 +1,4 @@
-/*! For license information please see quad-tap.js.LICENSE.txt */
+
 var t;
 t = () => ( () => {
     var t = {
@@ -3017,4 +3017,4 @@ t = () => ( () => {
 }
 )(),
 "object" == typeof exports && "object" == typeof module ? module.exports = t() : "function" == typeof define && define.amd ? define("QuadTap", [], t) : "object" == typeof exports ? exports.QuadTap = t() : this.QuadTap = t();
-//# sourceMappingURL=quad-tap.js.map
+
