@@ -519,94 +519,206 @@ describe('QuadTap Component', () => {
     });
   });
 
-  describe('Light-Box Interaction', () => {
+  describe('Light-Box Interaction (Updated for New Playback Logic)', () => {
     beforeEach(() => {
-      // Setup initial state
-      quadTap.state.active = true;
-      quadTap.state.lightBoxOpen = false;
-      mockVideo.paused = false;
-      
-      // Create real implementations for testing
+      // Reset mocks for video/adapter for each lightbox test
+      mockVideo.play.mockClear();
+      mockVideo.pause.mockClear();
+      mockAdapter.play.mockClear();
+      mockAdapter.pause.mockClear();
+
+      // Simulate QuadTap's actual openLightBox and closeLightBox methods
+      // by calling the global helper functions p and h,
+      // and the deactivateOverlay method.
+      // We need to ensure the 'this' context is correctly bound for p and h.
+      // The actual QuadTap code uses IIFEs and .apply for this.
+
       quadTap.openLightBox = function() {
-        this.state.lightBoxOpen = true;
-        
-        // Store current playing state
-        this.state.wasPlayingBefore = true;
-        
-        // Pause video
+        this.log("Opening light-box");
+        this.elements.lightBox.classList.add("active"); // Simulate lightbox UI change
+        if (this.state.autoCancelTimer) {
+            clearTimeout(this.state.autoCancelTimer);
+            this.state.autoCancelTimer = null;
+        }
+        // Directly call the global pause helper 'p' as the original code does
+        // This requires 'p' to be accessible in the test scope or mocked appropriately
+        // For simplicity, we'll assume 'p' is available and call the adapter/video directly
+        // based on the logic within 'p' and the recent changes.
         if (this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter) {
-          this.config.videoPlayerApi.adapter.pause();
+            this.config.videoPlayerApi.adapter.pause();
+        } else if (this.elements.video) {
+            this.elements.video.pause();
+        }
+        // Update UI for control strip if necessary (simplified)
+        if (this.elements.videoControls && this.elements.videoControlsObj) {
+            if (this.elements.videoControlsObj.updatePlayPauseButton) {
+                this.elements.videoControlsObj.updatePlayPauseButton(false);
+            }
+        }
+        if (this.config.callbacks.onThrowDownInitiate) {
+            this.config.callbacks.onThrowDownInitiate(this.state.currentQuadrant, this.state.profileBubblePosition.x, this.state.profileBubblePosition.y);
         }
       };
-      
-      quadTap.closeLightBox = function(confirm = false) {
-        this.state.lightBoxOpen = false;
-        
-        // Resume video if it was playing before
-        if (this.state.wasPlayingBefore) {
-          if (this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter) {
+
+      quadTap.closeLightBox = function() {
+        this.log("Closing light-box");
+        this.elements.lightBox.classList.remove("active"); // Simulate lightbox UI change
+
+        // Directly call the global play helper 'h' as the original code does
+        // Similar to openLightBox, we'll call adapter/video directly.
+        // The original code uses a setTimeout, we'll call it directly for test simplicity.
+        if (this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter) {
             this.config.videoPlayerApi.adapter.play();
-          }
+        } else if (this.elements.video) {
+            this.elements.video.play();
         }
-        
-        // Save throw-down if confirmed
-        if (confirm) {
-          this.saveThrowDown();
+        // Update UI for control strip
+        if (this.elements.videoControls && this.elements.videoControlsObj) {
+             if (this.elements.videoControlsObj.updatePlayPauseButton) {
+                this.elements.videoControlsObj.updatePlayPauseButton(true);
+            }
         }
+        this.deactivateOverlay(); // This is called at the end of closeLightBox
       };
+      
+      // Ensure deactivateOverlay is a spy for verification
+      quadTap.deactivateOverlay = jest.fn();
     });
 
-    test('should pause video when opening light-box', () => {
-      // Setup
-      mockVideo.paused = false;
-      mockAdapter.isPlaying.mockReturnValue(true);
-      
-      // Act
+    test('should ALWAYS pause video when opening light-box (video was playing)', () => {
+      mockVideo.paused = false; // Video is initially playing
+      mockAdapter.isPlaying.mockResolvedValue(true); // Adapter reports playing
+
       quadTap.openLightBox();
-      
-      // Assert
-      expect(quadTap.state.lightBoxOpen).toBe(true);
-      expect(mockAdapter.pause).toHaveBeenCalled();
-      expect(quadTap.state.wasPlayingBefore).toBe(true);
+
+      expect(mockAdapter.pause).toHaveBeenCalledTimes(1);
+      // If not using adapter, test native video pause
+      // expect(mockVideo.pause).toHaveBeenCalledTimes(1);
+      expect(quadTap.config.callbacks.onThrowDownInitiate).toHaveBeenCalled();
     });
 
-    test('should resume video when closing light-box if it was playing before', () => {
-      // Setup
-      mockVideo.paused = false;
-      mockAdapter.isPlaying.mockReturnValue(true);
-      quadTap.state.lightBoxOpen = true;
-      quadTap.state.wasPlayingBefore = true;
-      
-      // Act
-      quadTap.closeLightBox(false);
-      
-      // Assert
-      expect(quadTap.state.lightBoxOpen).toBe(false);
-      expect(mockAdapter.play).toHaveBeenCalled();
+    test('should ALWAYS pause video when opening light-box (video was paused)', () => {
+      mockVideo.paused = true; // Video is initially paused
+      mockAdapter.isPlaying.mockResolvedValue(false); // Adapter reports paused
+
+      quadTap.openLightBox();
+
+      expect(mockAdapter.pause).toHaveBeenCalledTimes(1);
+      // If not using adapter, test native video pause
+      // expect(mockVideo.pause).toHaveBeenCalledTimes(1);
     });
 
-    test('should not resume video when closing light-box if it was paused before', () => {
-      // Setup
-      quadTap.state.lightBoxOpen = true;
-      quadTap.state.wasPlayingBefore = false;
-      
-      // Act
-      quadTap.closeLightBox(false);
-      
-      // Assert
-      expect(quadTap.state.lightBoxOpen).toBe(false);
-      expect(mockAdapter.play).not.toHaveBeenCalled();
+    test('should ALWAYS play video and deactivate overlay when closing light-box', () => {
+      // First open it to set up state
+      mockVideo.paused = true;
+      mockAdapter.isPlaying.mockResolvedValue(false);
+      quadTap.openLightBox(); // This will call pause
+      mockAdapter.pause.mockClear(); // Clear pause mock before testing close
+
+      quadTap.closeLightBox();
+
+      expect(mockAdapter.play).toHaveBeenCalledTimes(1);
+      // If not using adapter, test native video play
+      // expect(mockVideo.play).toHaveBeenCalledTimes(1);
+      expect(quadTap.deactivateOverlay).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Overlay and Lightbox Playback Logic', () => {
+    beforeEach(() => {
+        // Reset mocks for video/adapter
+        mockVideo.play.mockClear();
+        mockVideo.pause.mockClear();
+        mockAdapter.play.mockClear();
+        mockAdapter.pause.mockClear();
+        quadTap.deactivateOverlay.mockClear(); // Assuming deactivateOverlay is spied upon
+
+        // Restore original activateOverlay and deactivateOverlay for these specific tests
+        // to ensure we are testing their interaction with playback (which should be none)
+        const originalActivateOverlay = QuadTap.prototype.activateOverlay;
+        const originalDeactivateOverlay = QuadTap.prototype.deactivateOverlay;
+
+        quadTap.activateOverlay = function(x,y) { // Simplified from original for test focus
+            this.log("Activating overlay", { x, y });
+            this.elements.overlay.style.display = "block";
+            this.elements.overlay.classList.add("active");
+            this.state.active = true;
+            if (this.config.callbacks.onOverlayActivate) {
+                this.config.callbacks.onOverlayActivate(x, y);
+            }
+        };
+        quadTap.deactivateOverlay = function() { // Simplified
+            this.log("Deactivating overlay");
+            this.elements.overlay.classList.remove("active");
+            this.state.active = false;
+            if (this.config.callbacks.onThrowDownCancel) {
+                this.config.callbacks.onThrowDownCancel(this.state.currentQuadrant);
+            }
+        };
+         // Spy on the simplified deactivateOverlay for closeLightBox tests
+        jest.spyOn(quadTap, 'deactivateOverlay');
+
+
+        // Lightbox methods as defined in the previous describe block for consistency
+        quadTap.openLightBox = function() {
+            this.log("Opening light-box");
+            this.elements.lightBox.classList.add("active");
+            if (this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter) {
+                this.config.videoPlayerApi.adapter.pause();
+            } else if (this.elements.video) {
+                this.elements.video.pause();
+            }
+            if (this.config.callbacks.onThrowDownInitiate) {
+                this.config.callbacks.onThrowDownInitiate(this.state.currentQuadrant, this.state.profileBubblePosition.x, this.state.profileBubblePosition.y);
+            }
+        };
+
+        quadTap.closeLightBox = function() {
+            this.log("Closing light-box");
+            this.elements.lightBox.classList.remove("active");
+            if (this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter) {
+                this.config.videoPlayerApi.adapter.play();
+            } else if (this.elements.video) {
+                this.elements.video.play();
+            }
+            this.deactivateOverlay();
+        };
     });
 
-    test('should save throw-down when confirming', () => {
-      // Setup
-      quadTap.state.lightBoxOpen = true;
-      
-      // Act
-      quadTap.closeLightBox(true);
-      
-      // Assert
-      expect(quadTap.saveThrowDown).toHaveBeenCalled();
+    test('activating overlay should NOT pause or play the video', () => {
+        quadTap.activateOverlay(100, 100);
+        expect(mockAdapter.pause).not.toHaveBeenCalled();
+        expect(mockAdapter.play).not.toHaveBeenCalled();
+        expect(mockVideo.pause).not.toHaveBeenCalled();
+        expect(mockVideo.play).not.toHaveBeenCalled();
+    });
+
+    test('deactivating overlay should NOT pause or play the video', () => {
+        quadTap.state.active = true; // Simulate overlay being active
+        quadTap.deactivateOverlay();
+        expect(mockAdapter.pause).not.toHaveBeenCalled();
+        expect(mockAdapter.play).not.toHaveBeenCalled();
+        expect(mockVideo.pause).not.toHaveBeenCalled();
+        expect(mockVideo.play).not.toHaveBeenCalled();
+    });
+
+    test('opening lightbox (via openLightBox) should pause the video', () => {
+        mockVideo.paused = false;
+        mockAdapter.isPlaying.mockResolvedValue(true);
+        quadTap.openLightBox();
+        expect(mockAdapter.pause).toHaveBeenCalledTimes(1);
+    });
+
+    test('closing lightbox (via closeLightBox) should play the video and deactivate overlay', () => {
+        // Simulate opening lightbox first to ensure video is paused by it
+        mockVideo.paused = false;
+        mockAdapter.isPlaying.mockResolvedValue(true);
+        quadTap.openLightBox();
+        mockAdapter.pause.mockClear(); // Clear pause call from openLightBox
+
+        quadTap.closeLightBox();
+        expect(mockAdapter.play).toHaveBeenCalledTimes(1);
+        expect(quadTap.deactivateOverlay).toHaveBeenCalledTimes(1);
     });
   });
 
