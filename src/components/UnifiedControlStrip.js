@@ -70,6 +70,39 @@ export function createUnifiedControlStrip(options) {
     }
   });
   
+  // Check if we're on a mobile device
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+  
+  // Check orientation - true if portrait (height > width)
+  const isPortrait = window.innerHeight > window.innerWidth;
+  
+  // Calculate responsive font size based on device and orientation
+  const getResponsiveButtonStyles = (isLarge = false) => {
+    // Base font size
+    let fontSize = isLarge ? 24 : 20;
+    
+    // Adjust for mobile
+    if (isMobile) {
+      fontSize = isLarge ? 22 : 18;
+      
+      // Further adjust for portrait orientation
+      if (isPortrait) {
+        fontSize = isLarge ? 20 : 16;
+      }
+    }
+    
+    return {
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: 'white',
+      fontSize: `${fontSize}px`,
+      cursor: 'pointer',
+      padding: '5px 10px',
+      margin: '0 5px',
+      transition: 'transform 0.2s ease, font-size 0.3s ease'
+    };
+  };
+  
   // Create rewind button
   const rewindButton = createElement('button', {
     className: 'qt-control-button qt-rewind-button',
@@ -78,15 +111,7 @@ export function createUnifiedControlStrip(options) {
       'data-cmd': 'seek:-30',
       'title': `Rewind ${rewindTime} seconds`
     },
-    styles: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: 'white',
-      fontSize: '20px',
-      cursor: 'pointer',
-      padding: '5px 10px',
-      margin: '0 5px'
-    }
+    styles: getResponsiveButtonStyles()
   });
   
   // Create play/pause button
@@ -97,15 +122,7 @@ export function createUnifiedControlStrip(options) {
       'data-cmd': 'play',
       'title': 'Play/Pause'
     },
-    styles: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: 'white',
-      fontSize: '24px',
-      cursor: 'pointer',
-      padding: '5px 10px',
-      margin: '0 5px'
-    }
+    styles: getResponsiveButtonStyles(true) // Larger size for play/pause
   });
   
   // Create forward button
@@ -116,15 +133,7 @@ export function createUnifiedControlStrip(options) {
       'data-cmd': 'seek:+30',
       'title': `Forward ${forwardTime} seconds`
     },
-    styles: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: 'white',
-      fontSize: '20px',
-      cursor: 'pointer',
-      padding: '5px 10px',
-      margin: '0 5px'
-    }
+    styles: getResponsiveButtonStyles()
   });
   
   // Create share button
@@ -135,15 +144,7 @@ export function createUnifiedControlStrip(options) {
       'data-cmd': 'share',
       'title': 'Share'
     },
-    styles: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: 'white',
-      fontSize: '20px',
-      cursor: 'pointer',
-      padding: '5px 10px',
-      margin: '0 5px'
-    }
+    styles: getResponsiveButtonStyles()
   });
   
   // Create copy URL button
@@ -154,15 +155,7 @@ export function createUnifiedControlStrip(options) {
       'data-cmd': 'copyurl',
       'title': 'Copy URL'
     },
-    styles: {
-      backgroundColor: 'transparent',
-      border: 'none',
-      color: 'white',
-      fontSize: '20px',
-      cursor: 'pointer',
-      padding: '5px 10px',
-      margin: '0 5px'
-    }
+    styles: getResponsiveButtonStyles()
   });
   
   // Create slider container

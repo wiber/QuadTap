@@ -46,7 +46,7 @@ const controlStripStyles = {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    transition: 'background-color 0.2s ease'
+    transition: 'background-color 0.2s ease, font-size 0.3s ease, width 0.3s ease, height 0.3s ease'
   },
   buttonHover: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)'

@@ -602,7 +602,7 @@ t = () => ( () => {
         justifyContent: "space-around",
         alignItems: "center",
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-        transition: "opacity 0.3s ease"
+        transition: "opacity 0.3s ease, width 0.3s ease, padding 0.3s ease"
     }
       , m = {
         position: "absolute",
@@ -2104,39 +2104,51 @@ t = () => ( () => {
         }, {
             key: "calculateResponsiveEmojiSize",
             value: function() {
-                var t, e, o = this.state.containerDimensions, n = o.width, i = o.height, a = Math.min(n, i);
+                var t, e, o = this.state.containerDimensions, n = o.width, i = o.height;
                 
                 // Check if we're on a mobile device
                 var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
                 
-                // More aggressive scaling for small screens
-                if (a < 200) {
-                    t = "1rem";
-                    e = "1.5rem";
-                } else if (a < 300) {
-                    t = "1.2rem";
-                    e = "1.8rem";
-                } else if (a < 400) {
-                    t = "1.5rem";
-                    e = "2.2rem";
-                } else if (a < 600) {
-                    t = "2rem";
-                    e = "2.8rem";
-                } else if (a < 800) {
-                    t = "2.5rem";
-                    e = "3.5rem";
+                // Check orientation - true if portrait (height > width)
+                var isPortrait = i > n;
+                
+                // Base emoji size on width rather than the minimum dimension
+                // This ensures emojis are properly sized when orientation changes
+                var widthBasedSize;
+                
+                if (n < 200) {
+                    widthBasedSize = 0.8; // Very small screens
+                } else if (n < 300) {
+                    widthBasedSize = 1.0; // Small screens
+                } else if (n < 400) {
+                    widthBasedSize = 1.2; // Medium-small screens
+                } else if (n < 600) {
+                    widthBasedSize = 1.5; // Medium screens
+                } else if (n < 800) {
+                    widthBasedSize = 1.8; // Medium-large screens
                 } else {
-                    t = "3rem";
-                    e = "4rem";
+                    widthBasedSize = 2.0; // Large screens
                 }
                 
-                // Further reduce size on mobile
-                if (isMobile) {
-                    t = t.replace(/([0-9.]+)rem/, function(match, size) {
-                        return (parseFloat(size) * 0.8) + "rem";
-                    });
-                    e = e.replace(/([0-9.]+)rem/, function(match, size) {
-                        return (parseFloat(size) * 0.8) + "rem";
+                // Adjust size based on orientation
+                if (isPortrait && isMobile) {
+                    // In portrait mode on mobile, make emojis smaller relative to width
+                    widthBasedSize *= 0.85;
+                }
+                
+                // Calculate final sizes
+                t = widthBasedSize + "rem";
+                e = (widthBasedSize * 1.4) + "rem";
+                
+                // Log sizes if debug is enabled
+                if (this.config.debug) {
+                    console.log("[QuadTap] Responsive emoji sizes:", {
+                        width: n,
+                        height: i,
+                        isPortrait: isPortrait,
+                        isMobile: isMobile,
+                        defaultSize: t,
+                        enlargedSize: e
                     });
                 }
                 
@@ -2150,31 +2162,43 @@ t = () => ( () => {
         }, {
             key: "calculateResponsiveBubbleSize",
             value: function() {
-                // Get the smallest dimension to base bubble size on
+                // Get container dimensions
                 var containerWidth = this.state.containerDimensions.width;
                 var containerHeight = this.state.containerDimensions.height;
-                var minDimension = Math.min(containerWidth, containerHeight);
                 
                 // Check if we're on a mobile device
                 var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
                 
-                // More fine-grained scaling for better responsiveness
+                // Check orientation - true if portrait (height > width)
+                var isPortrait = containerHeight > containerWidth;
+                
+                // Base bubble size on width rather than minimum dimension
+                // This ensures consistent sizing when orientation changes
                 var bubbleSize;
-                if (minDimension < 200) {
-                    bubbleSize = 30; // Extra small for tiny containers
-                } else if (minDimension < 300) {
-                    bubbleSize = 36; // Smaller bubbles for very small containers
-                } else if (minDimension < 400) {
-                    bubbleSize = 44; // Small bubbles for small containers
-                } else if (minDimension < 600) {
-                    bubbleSize = 52; // Medium bubbles
-                } else {
-                    bubbleSize = 60; // Default size for regular containers
+                
+                // Size based on width percentage
+                var widthPercentage = isMobile ? 0.12 : 0.10; // 12% of width on mobile, 10% on desktop
+                bubbleSize = Math.round(containerWidth * widthPercentage);
+                
+                // Apply min/max constraints
+                bubbleSize = Math.max(30, bubbleSize); // Minimum size
+                bubbleSize = Math.min(70, bubbleSize); // Maximum size
+                
+                // Adjust for portrait orientation on mobile
+                if (isPortrait && isMobile) {
+                    // In portrait mode, make bubble slightly smaller
+                    bubbleSize = Math.floor(bubbleSize * 0.9);
                 }
                 
-                // Further reduce size on mobile
-                if (isMobile) {
-                    bubbleSize = Math.floor(bubbleSize * 0.85);
+                // Log size if debug is enabled
+                if (this.config.debug) {
+                    console.log("[QuadTap] Responsive bubble size:", {
+                        width: containerWidth,
+                        height: containerHeight,
+                        isPortrait: isPortrait,
+                        isMobile: isMobile,
+                        bubbleSize: bubbleSize
+                    });
                 }
                 
                 return {
@@ -3230,4 +3254,3 @@ t = () => ( () => {
 }
 )(),
 "object" == typeof exports && "object" == typeof module ? module.exports = t() : "function" == typeof define && define.amd ? define("QuadTap", [], t) : "object" == typeof exports ? exports.QuadTap = t() : this.QuadTap = t();
-
