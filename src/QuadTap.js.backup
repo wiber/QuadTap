@@ -593,9 +593,9 @@ t = () => ( () => {
         )))).apply(this, arguments)
     }
     var g = {
-        width: "70%",
-        maxWidth: "320px",
-        padding: "6px 10px",
+        width: "80%",
+        maxWidth: "400px",
+        padding: "8px 12px",
         borderRadius: "24px",
         backgroundColor: "rgba(0, 0, 0, 0.7)",
         display: "flex",
@@ -618,14 +618,14 @@ t = () => ( () => {
         margin: "20px auto"
     }
       , b = {
-        width: "34px",
-        height: "34px",
-        margin: "0 3px",
+        width: "40px",
+        height: "40px",
+        margin: "0 5px",
         borderRadius: "50%",
         border: "none",
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         color: "white",
-        fontSize: "16px",
+        fontSize: "18px",
         cursor: "pointer",
         outline: "none",
         transition: "background-color 0.2s ease"
@@ -667,6 +667,35 @@ t = () => ( () => {
           , y = t.isLightbox
           , x = void 0 !== y && y
           , j = document.createElement("div");
+
+        // Apply base styles
+        w(j, g);
+        w(j, x ? f : m);
+        
+        // Detect if we're on mobile or small screen
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var isSmallScreen = window.innerWidth < 768;
+        
+        // Adjust the control strip width and padding based on screen size
+        if (isMobile || isSmallScreen) {
+            if (x) { // Lightbox mode
+                j.style.width = "90%"; // Take up more space in lightbox on mobile
+            } else {  // Overlay mode
+                j.style.width = "90%";
+                j.style.padding = "6px 8px"; // Smaller padding on mobile
+                j.style.maxWidth = "300px"; // Limit max width on mobile
+            }
+            // Adjust button sizes if needed
+            var buttons = j.querySelectorAll("button");
+            if (buttons) {
+                buttons.forEach(function(btn) {
+                    btn.style.width = "36px";
+                    btn.style.height = "36px";
+                    btn.style.fontSize = "16px";
+                });
+            }
+        }
+        
         if (function(t, e) {
             w(t, g),
             w(t, e ? f : m)
@@ -680,8 +709,7 @@ t = () => ( () => {
             var e = "▶" === E.textContent;
             E.textContent = e ? "❚❚" : "▶",
             e ? o(t) : n(t)
-        }
-        ))
+        }))
           , q = C("⟳" + u, "Forward " + u + " seconds", a)
           , P = C("⤴", "Share", (function(t) {
             if (t.stopPropagation(),
@@ -1935,23 +1963,97 @@ t = () => ( () => {
                 }
                 ))),
                 window.addEventListener("resize", this.throttledResize),
+                
+                // Add specific orientation change handler for mobile devices
+                window.addEventListener("orientationchange", function() {
+                    // Force immediate resize when orientation changes
+                    setTimeout(function() {
+                        t.updateContainerDimensions();
+                        
+                        // Update positioning and sizing for all elements
+                        if (t.state.active) {
+                            var width = t.state.containerDimensions.width;
+                            var height = t.state.containerDimensions.height;
+                            var x = width * t.state.profileBubblePosition.x;
+                            var y = height * t.state.profileBubblePosition.y;
+                            
+                            // Apply responsive bubble size
+                            var bubbleDimensions = t.calculateResponsiveBubbleSize();
+                            t.elements.profileBubble.style.width = bubbleDimensions.width;
+                            t.elements.profileBubble.style.height = bubbleDimensions.height;
+                            
+                            // Update all positions
+                            n(t.elements.profileBubble, x, y);
+                            t.positionDirectionalEmojis(x, y);
+                            t.positionQuadrantEmojis();
+                            t.positionVideoControls();
+                            t.positionTooltip();
+                        }
+                        
+                        // If lightbox is open, update its size too
+                        if (t.elements.lightBox && t.elements.lightBox.classList.contains('active')) {
+                            var viewportWidth = window.innerWidth;
+                            var viewportHeight = window.innerHeight;
+                            
+                            if (t.elements.lightBoxContent) {
+                                var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
+                                var maxHeight = viewportHeight * 0.85;
+                                
+                                t.elements.lightBoxContent.style.maxWidth = maxWidth + 'px';
+                                t.elements.lightBoxContent.style.maxHeight = maxHeight + 'px';
+                                
+                                if (viewportWidth < 768) {
+                                    t.elements.lightBox.style.paddingTop = '5vh';
+                                    t.elements.lightBox.style.alignItems = 'flex-start';
+                                } else {
+                                    t.elements.lightBox.style.paddingTop = '0';
+                                    t.elements.lightBox.style.alignItems = 'center';
+                                }
+                            }
+                        }
+                        
+                        if (t.config.debug) {
+                            t.log("Orientation changed, updated UI", {
+                                width: t.state.containerDimensions.width,
+                                height: t.state.containerDimensions.height,
+                                isPortrait: window.innerHeight > window.innerWidth
+                            });
+                        }
+                    }, 250); // Small delay to ensure orientation change completes
+                }),
+                
                 this.updateContainerDimensions()
             }
         }, {
             key: "handleResize",
             value: function() {
+                this.updateContainerDimensions();
+                
                 if (this.state.active) {
-                    this.updateContainerDimensions();
-                    var t = this.state.containerDimensions.width * this.state.profileBubblePosition.x
-                      , e = this.state.containerDimensions.height * this.state.profileBubblePosition.y;
-                    n(this.elements.profileBubble, t, e),
-                    this.positionDirectionalEmojis(t, e),
-                    this.positionQuadrantEmojis(),
-                    this.positionVideoControls(),
-                    this.positionTooltip()
+                    // Recompute positions and sizes during resize
+                    if (this.elements.profileBubble) {
+                        // Calculate and apply new bubble size
+                        var t = this.calculateResponsiveBubbleSize();
+                        this.elements.profileBubble.style.width = t.width;
+                        this.elements.profileBubble.style.height = t.height;
+                        
+                        // Use our dedicated positioning method
+                        this.positionProfileBubble();
+                    }
+                    
+                    // Reposition and size quadrant emojis
+                    this.positionQuadrantEmojis();
+                    
+                    // Reposition video controls
+                    if (this.elements.videoControls) {
+                        this.positionVideoControls();
+                    }
+                    
+                    // Reposition tooltip
+                    this.positionTooltip();
                 }
                 
-                // If lightbox is active, recalculate its max-height and max-width on resize
+                // Adjust lightbox size if it's open
                 if (this.elements.lightBox && this.elements.lightBox.classList.contains('active') && this.elements.lightBoxContent) {
                     var viewportWidth = window.innerWidth;
                     var viewportHeight = window.innerHeight;
@@ -2032,14 +2134,15 @@ t = () => ( () => {
                 this.positionQuadrantEmojis(),
                 this.positionVideoControls(),
                 this.positionTooltip(),
+                
                 this.state.active = !0,
                 this.config.autoCancelTimeout > 0 && (this.state.autoCancelTimer = setTimeout((function() {
                     o.deactivateOverlay()
                 }
                 ), this.config.autoCancelTimeout)),
                 this.config.callbacks.onOverlayActivate && this.config.callbacks.onOverlayActivate(t, e)
-            }
-        }, {
+            },
+            
             key: "positionDirectionalEmojis",
             value: function(t, e) {
                 var o = this.state.containerDimensions
@@ -2098,66 +2201,57 @@ t = () => ( () => {
                 q.style.transform = "translate(0, -50%) scale(".concat(S, ")"),
                 q.style.fontSize = "2rem",
                 q.style.opacity = "0.8"
-            }
-        }, {
+            },
+            
             key: "calculateResponsiveEmojiSize",
             value: function() {
-                var t, e, o = this.state.containerDimensions, n = o.width, i = o.height;
+                var containerWidth = this.state.containerDimensions.width;
+                var containerHeight = this.state.containerDimensions.height;
                 
                 // Check if we're on a mobile device
                 var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
                 
-                // Check orientation - true if portrait (height > width)
-                var isPortrait = i > n;
+                // Check orientation - true if portrait
+                var isPortrait = containerHeight > containerWidth;
                 
-                // Base emoji size on width rather than the minimum dimension
-                // This ensures emojis are properly sized when orientation changes
-                var widthBasedSize;
+                // Calculate scale factor based on container width
+                // Now using a smaller base scale (approx half the previous size)
+                var scaleFactor = Math.max(0.2, Math.min(0.5, containerWidth / 1000));
                 
-                if (n < 200) {
-                    widthBasedSize = 0.8; // Very small screens
-                } else if (n < 300) {
-                    widthBasedSize = 1.0; // Small screens
-                } else if (n < 400) {
-                    widthBasedSize = 1.2; // Medium-small screens
-                } else if (n < 600) {
-                    widthBasedSize = 1.5; // Medium screens
-                } else if (n < 800) {
-                    widthBasedSize = 1.8; // Medium-large screens
-                } else {
-                    widthBasedSize = 2.0; // Large screens
+                // Adjust for small widths more aggressively
+                if (containerWidth < 400) {
+                    scaleFactor = Math.max(0.2, containerWidth / 1200);
                 }
                 
-                // Adjust size based on orientation
+                // Adjust for orientation
                 if (isPortrait && isMobile) {
-                    // In portrait mode on mobile, make emojis smaller relative to width
-                    widthBasedSize *= 0.85;
+                    // Make emojis smaller in portrait mode on mobile
+                    scaleFactor *= 0.8;
                 }
                 
-                // Calculate final sizes
-                t = widthBasedSize + "rem";
-                e = (widthBasedSize * 1.4) + "rem";
+                // Convert to rem-based sizes - smaller than before
+                var defaultSize = (1.2 * scaleFactor) + "rem";
+                var enlargedSize = (1.8 * scaleFactor) + "rem";
                 
-                // Log sizes if debug is enabled
                 if (this.config.debug) {
                     console.log("[QuadTap] Responsive emoji sizes:", {
-                        width: n,
-                        height: i,
+                        width: containerWidth,
+                        height: containerHeight,
                         isPortrait: isPortrait,
-                        isMobile: isMobile,
-                        defaultSize: t,
-                        enlargedSize: e
+                        scaleFactor: scaleFactor,
+                        defaultSize: defaultSize,
+                        enlargedSize: enlargedSize
                     });
                 }
                 
                 return {
-                    defaultSize: t,
-                    enlargedSize: e,
+                    defaultSize: defaultSize,
+                    enlargedSize: enlargedSize,
                     defaultOpacity: "0.6",
                     enlargedOpacity: "0.8"
-                }
-            }
-        }, {
+                };
+            },
+            
             key: "calculateResponsiveBubbleSize",
             value: function() {
                 // Get container dimensions
@@ -2170,17 +2264,16 @@ t = () => ( () => {
                 // Check orientation - true if portrait (height > width)
                 var isPortrait = containerHeight > containerWidth;
                 
-                // Base bubble size on width rather than minimum dimension
-                // This ensures consistent sizing when orientation changes
+                // Base bubble size on width - using smaller percentages (about half)
                 var bubbleSize;
                 
-                // Size based on width percentage
-                var widthPercentage = isMobile ? 0.12 : 0.10; // 12% of width on mobile, 10% on desktop
+                // Size based on width percentage - reduced to approximately half
+                var widthPercentage = isMobile ? 0.06 : 0.05; // 6% of width on mobile, 5% on desktop
                 bubbleSize = Math.round(containerWidth * widthPercentage);
                 
-                // Apply min/max constraints
-                bubbleSize = Math.max(30, bubbleSize); // Minimum size
-                bubbleSize = Math.min(70, bubbleSize); // Maximum size
+                // Apply min/max constraints - smaller than before
+                bubbleSize = Math.max(20, bubbleSize); // Minimum size
+                bubbleSize = Math.min(40, bubbleSize); // Maximum size
                 
                 // Adjust for portrait orientation on mobile
                 if (isPortrait && isMobile) {
@@ -2203,80 +2296,207 @@ t = () => ( () => {
                     width: bubbleSize + 'px',
                     height: bubbleSize + 'px'
                 };
-            }
-        }, {
+            },
+            
             key: "positionQuadrantEmojis",
             value: function() {
-                var t = this.calculateResponsiveEmojiSize()
-                  , e = t.defaultSize
-                  , o = t.enlargedSize
-                  , n = t.defaultOpacity
-                  , i = t.enlargedOpacity
-                  , a = this.elements.quadrantEmojis.topLeft;
-                a.style.display = "block",
-                a.style.position = "absolute",
-                a.style.top = "8%",
-                a.style.left = "8%",
-                a.style.transform = "translate(-50%, -50%)",
-                a.style.fontSize = e,
-                a.style.opacity = n;
+                var t = "1.2rem",
+                    e = "1.7rem", 
+                    o = "0.6",
+                    i = "0.8";
+                
+                // Get container dimensions for responsive positioning
+                var containerWidth = this.state.containerDimensions.width;
+                var containerHeight = this.state.containerDimensions.height;
+                
+                // Calculate responsive positioning values
+                // Adjust corner positions based on container width - closer to corners
+                var cornerDistance;
+                
+                if (containerWidth < 300) {
+                    cornerDistance = "2.5%"; // Closer to corners on very small screens
+                } else if (containerWidth < 400) {
+                    cornerDistance = "3%"; // Small screens
+                } else if (containerWidth < 600) {
+                    cornerDistance = "3.5%"; // Medium screens
+                } else {
+                    cornerDistance = "4%"; // Default for larger screens
+                }
+                
+                // Position top-left emoji
+                var a = this.elements.quadrantEmojis.topLeft;
+                a.style.display = "block";
+                a.style.position = "absolute";
+                a.style.top = cornerDistance;
+                a.style.left = cornerDistance;
+                a.style.transform = "translate(-50%, -50%)";
+                a.style.fontSize = t;
+                a.style.opacity = o;
+                
+                // Position top-right emoji
                 var r = this.elements.quadrantEmojis.topRight;
-                r.style.display = "block",
-                r.style.position = "absolute",
-                r.style.top = "8%",
-                r.style.right = "8%",
-                r.style.transform = "translate(50%, -50%)",
-                r.style.fontSize = e,
-                r.style.opacity = n;
+                r.style.display = "block";
+                r.style.position = "absolute";
+                r.style.top = cornerDistance;
+                r.style.right = cornerDistance;
+                r.style.transform = "translate(50%, -50%)";
+                r.style.fontSize = t;
+                r.style.opacity = o;
+                
+                // Position bottom-left emoji
                 var s = this.elements.quadrantEmojis.bottomLeft;
-                s.style.display = "block",
-                s.style.position = "absolute",
-                s.style.bottom = "8%",
-                s.style.left = "8%",
-                s.style.transform = "translate(-50%, 50%)",
-                s.style.fontSize = e,
-                s.style.opacity = n;
+                s.style.display = "block";
+                s.style.position = "absolute";
+                s.style.bottom = cornerDistance;
+                s.style.left = cornerDistance;
+                s.style.transform = "translate(-50%, 50%)";
+                s.style.fontSize = t;
+                s.style.opacity = o;
+                
+                // Position bottom-right emoji
                 var l = this.elements.quadrantEmojis.bottomRight;
-                if (l.style.display = "block",
-                l.style.position = "absolute",
-                l.style.bottom = "8%",
-                l.style.right = "8%",
-                l.style.transform = "translate(50%, 50%)",
-                l.style.fontSize = e,
-                l.style.opacity = n,
-                this.state.currentQuadrant)
+                l.style.display = "block";
+                l.style.position = "absolute";
+                l.style.bottom = cornerDistance;
+                l.style.right = cornerDistance;
+                l.style.transform = "translate(50%, 50%)";
+                l.style.fontSize = t;
+                l.style.opacity = o;
+                
+                // Highlight the current quadrant emoji if applicable
+                if (this.state.currentQuadrant) {
                     switch (this.state.currentQuadrant) {
                     case "top-left":
-                        a.style.fontSize = o,
+                        a.style.fontSize = e;
                         a.style.opacity = i;
                         break;
                     case "top-right":
-                        r.style.fontSize = o,
+                        r.style.fontSize = e;
                         r.style.opacity = i;
                         break;
                     case "bottom-left":
-                        s.style.fontSize = o,
+                        s.style.fontSize = e;
                         s.style.opacity = i;
                         break;
                     case "bottom-right":
-                        l.style.fontSize = o,
-                        l.style.opacity = i
+                        l.style.fontSize = e;
+                        l.style.opacity = i;
                     }
-            }
-        }, {
+                }
+            },
+            
             key: "positionVideoControls",
             value: function() {
                 if (this.config.videoControls.enabled) {
                     var t = this.elements.videoControls;
-                    t.style.display = "flex",
-                    t.style.position = "absolute",
-                    t.style.top = "50%",
-                    t.style.left = "50%",
-                    t.style.transform = "translate(-50%, -50%)",
-                    t.style.zIndex = "1001"
+                    t.style.display = "flex";
+                    
+                    // Check if we're on mobile or small screen
+                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    var isSmallScreen = window.innerWidth < 768;
+                    var containerWidth = this.state.containerDimensions.width;
+                    var containerHeight = this.state.containerDimensions.height;
+                    var isPortrait = containerHeight > containerWidth;
+                    
+                    // Adjust control strip size based on container width specifically
+                    // This ensures proper scaling during orientation changes
+                    var controlStripBaseWidth;
+                    
+                    if (containerWidth < 300) {
+                        // Very small width screens
+                        controlStripBaseWidth = "85%";
+                        t.style.padding = "3px 5px";
+                    } else if (containerWidth < 400) {
+                        // Small width screens
+                        controlStripBaseWidth = "80%";
+                        t.style.padding = "4px 6px";
+                    } else if (containerWidth < 600) {
+                        // Medium width screens
+                        controlStripBaseWidth = "70%";
+                        t.style.padding = "5px 8px";
+                    } else {
+                        // Large width screens
+                        controlStripBaseWidth = "60%";
+                        t.style.padding = "6px 10px";
+                    }
+                    
+                    t.style.width = controlStripBaseWidth;
+                    t.style.maxWidth = (containerWidth < 600) ? (Math.min(containerWidth * 0.85, 350) + "px") : "350px";
+                    
+                    // Ensure margins don't create layout issues
+                    t.style.boxSizing = "border-box";
+                    t.style.margin = "0";
+                    
+                    // Scale button sizes proportionally to container width
+                    var buttons = t.querySelectorAll("button");
+                    if (buttons && buttons.length) {
+                        var buttonSize, fontSize, buttonMargin;
+                        
+                        if (containerWidth < 300) {
+                            buttonSize = "20px";
+                            fontSize = "10px";
+                            buttonMargin = "0 1px";
+                        } else if (containerWidth < 400) {
+                            buttonSize = "22px";
+                            fontSize = "11px";
+                            buttonMargin = "0 2px";
+                        } else if (containerWidth < 600) {
+                            buttonSize = "24px";
+                            fontSize = "12px";
+                            buttonMargin = "0 2px";
+                        } else {
+                            buttonSize = "28px";
+                            fontSize = "14px";
+                            buttonMargin = "0 3px";
+                        }
+                        
+                        for (var i = 0; i < buttons.length; i++) {
+                            buttons[i].style.width = buttonSize;
+                            buttons[i].style.height = buttonSize;
+                            buttons[i].style.fontSize = fontSize;
+                            buttons[i].style.margin = buttonMargin;
+                            buttons[i].style.padding = "0";
+                            buttons[i].style.minWidth = buttonSize;
+                            buttons[i].style.minHeight = buttonSize;
+                            buttons[i].style.lineHeight = buttonSize;
+                            buttons[i].style.overflow = "hidden";
+                        }
+                    }
+                    
+                    // Position control strip based on orientation
+                    t.style.position = "absolute";
+                    
+                    if (isPortrait || containerWidth < 450) {
+                        // For portrait mode or very narrow screens, position at bottom center
+                        var bottomOffset = Math.min(20, containerHeight * 0.05);
+                        t.style.bottom = bottomOffset + "px";
+                        t.style.left = "50%";
+                        t.style.top = "auto";
+                        t.style.transform = "translateX(-50%)";
+                    } else {
+                        // For landscape mode, position in center
+                        t.style.top = "50%";
+                        t.style.left = "50%";
+                        t.style.bottom = "auto";
+                        t.style.transform = "translate(-50%, -50%)";
+                    }
+                    
+                    // Set explicit z-index and overflow
+                    t.style.zIndex = "1001";
+                    t.style.overflow = "hidden";
+                    
+                    if (this.config.debug) {
+                        this.log("Positioned video controls:", {
+                            containerWidth: containerWidth,
+                            containerHeight: containerHeight,
+                            isPortrait: isPortrait,
+                            controlStripWidth: t.style.width,
+                            buttonSize: buttons && buttons.length ? buttons[0].style.width : 'n/a'
+                        });
+                    }
                 }
-            }
-        }, {
+            },
+            
             key: "positionTooltip",
             value: function() {
                 if (this.config.tooltip && !1 !== this.config.tooltip.enabled) {
@@ -2318,8 +2538,8 @@ t = () => ( () => {
                         t.style.padding = "8px 12px",
                         t.style.borderRadius = "4px"
                 }
-            }
-        }, {
+            },
+            
             key: "controlVideo",
             value: function(t) {
                 this.log("Controlling video", t);
@@ -2348,8 +2568,8 @@ t = () => ( () => {
                     this.config.callbacks.onVideoControl && this.config.callbacks.onVideoControl(t, e.currentTime)
                 } else
                     this.log("Video element not found")
-            }
-        }, {
+            },
+            
             key: "deactivateOverlay",
             value: function() {
                 var t = this;
@@ -2375,8 +2595,8 @@ t = () => ( () => {
                 this.state.autoCancelTimer = null),
                 this.config.callbacks.onThrowDownCancel && this.config.callbacks.onThrowDownCancel(this.state.currentQuadrant),
                 this.log("Overlay deactivated")
-            }
-        }, {
+            },
+            
             key: "createVideoTimeSlider",
             value: function() {
                 return o("div", {
@@ -2384,8 +2604,8 @@ t = () => ( () => {
                         display: "none"
                     }
                 })
-            }
-        }, {
+            },
+            
             key: "openLightBox",
             value: function() {
                 var t = this;
@@ -2456,8 +2676,8 @@ t = () => ( () => {
                         this.log("Error updating play/pause button", t)
                     }
                 this.config.callbacks.onThrowDownInitiate && this.config.callbacks.onThrowDownInitiate(this.state.currentQuadrant, this.state.profileBubblePosition.x, this.state.profileBubblePosition.y)
-            }
-        }, {
+            },
+            
             key: "closeLightBox",
             value: function() {
                 var t = this;
@@ -2481,8 +2701,8 @@ t = () => ( () => {
                 ), 100),
                 // this.state.wasPlayingBefore = !1, // QuadTap MOD: Removed wasPlayingBefore logic, video always plays.
                 this.deactivateOverlay() // QuadTap MOD: Ensure overlay is deactivated.
-            }
-        }, {
+            },
+            
             key: "updateVideoTimeDisplay",
             value: function() {
                 if (this.elements.videoInfoDisplay) {
@@ -2506,8 +2726,8 @@ t = () => ( () => {
                         }
                     }
                 }
-            }
-        }, {
+            },
+            
             key: "startRecording",
             value: function() {
                 var t = this;
@@ -2569,15 +2789,15 @@ t = () => ( () => {
                     t.state.recording = !1
                 }
                 ))
-            }
-        }, {
+            },
+            
             key: "stopRecording",
             value: function() {
                 this.log("Stopping video recording"),
                 this.state.mediaRecorder && this.state.recording && (this.state.mediaRecorder.stop(),
                 this.state.recordingIndicator && this.state.recordingIndicator.parentNode && this.state.recordingIndicator.parentNode.removeChild(this.state.recordingIndicator))
-            }
-        }, {
+            },
+            
             key: "toggleVideoPause",
             value: function() {
                 var t = this;
@@ -2613,8 +2833,8 @@ t = () => ( () => {
                         n && (n.textContent = "▶️")
                     }
                 this.config.callbacks.onVideoControl && this.config.callbacks.onVideoControl("playpause", o ? o.currentTime : 0)
-            }
-        }, {
+            },
+            
             key: "destroy",
             value: function() {
                 this.log("Destroying QuadTap"),
@@ -2653,8 +2873,49 @@ t = () => ( () => {
                     recordingIndicator: null
                 },
                 this.log("QuadTap destroyed")
+            },
+            
+            key: "positionProfileBubble",
+            value: function() {
+                if (this.elements.profileBubble && this.state.active) {
+                    var containerWidth = this.state.containerDimensions.width;
+                    var containerHeight = this.state.containerDimensions.height;
+                    var x = containerWidth * this.state.profileBubblePosition.x;
+                    var y = containerHeight * this.state.profileBubblePosition.y;
+                    
+                    // Ensure bubble doesn't get positioned off-screen
+                    var bubbleSize = parseFloat(this.elements.profileBubble.style.width) || 30;
+                    var halfSize = bubbleSize / 2;
+                    
+                    // Apply min/max boundaries to keep bubble fully in view
+                    x = Math.max(halfSize, Math.min(containerWidth - halfSize, x));
+                    y = Math.max(halfSize, Math.min(containerHeight - halfSize, y));
+                    
+                    // Position the bubble using absolute coordinates
+                    this.elements.profileBubble.style.left = x + "px";
+                    this.elements.profileBubble.style.top = y + "px";
+                    this.elements.profileBubble.style.transform = "translate(-50%, -50%)";
+                    
+                    // Apply any additional styling needed
+                    this.elements.profileBubble.style.position = "absolute";
+                    this.elements.profileBubble.style.zIndex = "1001";
+                    this.elements.profileBubble.style.overflow = "hidden";
+                    
+                    if (this.config.debug) {
+                        this.log("Positioned profile bubble:", {
+                            x: x,
+                            y: y,
+                            size: bubbleSize,
+                            containerWidth: containerWidth,
+                            containerHeight: containerHeight
+                        });
+                    }
+                    
+                    // Also position directional emojis relative to the bubble
+                    this.positionDirectionalEmojis(x, y);
+                }
             }
-        }],
+        },
         e && B(t.prototype, e),
         Object.defineProperty(t, "prototype", {
             writable: !1
