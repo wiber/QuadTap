@@ -1,31 +1,34 @@
-# QuadTap
+# QuadTap: Intuitive Video Interaction Reimagined
 
-A pure JavaScript implementation of the Quad-Tap overlay interaction design for videos with advanced video player API integration. A wibe coders dream? Maybe.
+**QuadTap is a pure JavaScript library that revolutionizes video engagement with a unique quad-tap overlay, designed for advanced video player integration and a richer user experience.**
 
-## Introduction to WHY
+<!-- TODO: Add a compelling GIF here demonstrating QuadTap in action! -->
+<!-- Example: ![QuadTap Demo](./docs/images/quadtap-in-action.gif) -->
 
+## Why QuadTap? The Motivation
 
+In an increasingly video-driven world, standard video player interactions often fall short of providing deep, nuanced engagement. QuadTap was born from the need for a more intuitive, expressive, and ultimately more human way to interact with video content. It serves as a sophisticated interaction layer, enabling users to not just consume, but to react, comment, and connect with video moments in a uniquely spatial and contextual manner. This project is the first step towards a future where digital interactions are richer and more meaningful.
 
-## Features
+## Key Features
 
-- **Quad-Tap Interaction**: Tap on a video to activate an overlay with quadrant gradients, axis emojis, and a bubble at the tap coordinates.
-- **Throw-Down Flow**: Tap on the bubble to open a light-box with thought emojis, comment box, and share/cancel options.
-- **Video Controls**: Built-in video controls that appear when the overlay is active.
-- **Swipe Navigation**: Vertical swipe to navigate between videos.
-- **Context Bars**: North (FROM) and South (TO) context bars for additional information.
-- **Video Player Integration**: Seamless integration with HTML5, YouTube, Vimeo, and custom video players.
-- **Customizable**: Extensive configuration options through the SettingsBuilder.
-- **Responsive**: Works on all screen sizes and devices.
-- **Accessible**: Keyboard navigation and screen reader support.
+- **Intuitive Quad-Tap Interaction**: Tap anywhere on a video to activate an elegant overlay with quadrant gradients, contextual axis emojis, and an interactive bubble at the tap coordinates.
+- **Expressive Throw-Down Flow**: Tap the bubble to open a "Throw-Down" lightbox with thought emojis, a comment box, and share/cancel options, allowing for nuanced feedback.
+- **Integrated Video Controls**: Seamlessly access video controls when the overlay is active.
+- **Smooth Swipe Navigation**: Effortlessly navigate between videos with vertical swipes.
+- **Contextual Information Bars**: Optional North (FROM) and South (TO) bars for additional context.
+- **Broad Video Player Compatibility**: Adapters for HTML5, YouTube, Vimeo, and easy integration with custom players.
+- **Highly Customizable**: Extensive configuration options via the `SettingsBuilder` to tailor the experience.
+- **Responsive & Accessible**: Designed for all screen sizes and with accessibility in mind.
 
 ## Installation
 
-```bash
-https://github.com/wiber/QuadTap.git
-```
-Or
+Get QuadTap via npm:
 ```bash
 npm install quad-tap
+```
+Or clone the repository:
+```bash
+git clone https://github.com/wiber/QuadTap.git
 ```
 
 ## Basic Usage
@@ -34,230 +37,131 @@ npm install quad-tap
 import QuadTap from 'quad-tap';
 import SettingsBuilder from 'quad-tap/SettingsBuilder';
 
-// Create a new settings builder
+// Configure your settings
 const settings = new SettingsBuilder()
-  .withContainer('video-container')
-  .withVideoSelector('#my-video')
+  .withContainer('video-container') // Your video container ID
+  .withVideoSelector('#my-video')    // Your video element selector
   .build();
 
 // Initialize QuadTap
 const quadTap = new QuadTap(settings);
 ```
 
-## Advanced Usage with Video Player Integration
+## Advanced Usage & Video Player Integration
+
+QuadTap shines with its powerful adapter system.
 
 ```javascript
 import QuadTap from 'quad-tap';
 import SettingsBuilder from 'quad-tap/SettingsBuilder';
 import VideoPlayerAdapter from 'quad-tap/adapters/VideoPlayerAdapter';
 
-// Get the video element
 const videoElement = document.querySelector('#my-video');
+// Example: HTML5 video adapter
+const adapter = VideoPlayerAdapter.forHtml5Video(videoElement, true /* debug */);
 
-// Create an adapter for HTML5 video
-const adapter = VideoPlayerAdapter.forHtml5Video(videoElement, true);
-
-// Configure QuadTap
 const settings = new SettingsBuilder()
   .withContainer('video-container')
   .withVideoSelector('#my-video')
-  .withDebug(true)
-  .withVideoControls({
-    enabled: true,
-    position: 'center',
-    autoHide: true,
-    autoHideDelay: 2000,
-    pauseOnLightboxOnly: true
-  })
   .withVideoPlayerAdapter(adapter)
+  .withDebug(true)
+  .withVideoControls({ enabled: true, position: 'center', autoHide: true })
   .onThrowDownConfirm((data) => {
-    saveThrowDown(data);
+    console.log('ThrowDown confirmed!', data);
+    // Your logic to save/process the throwdown data
   })
   .build();
 
 const quadTap = new QuadTap(settings);
 ```
+See [Video Player Adapters](#video-player-adapters) for more.
+
+## Documentation
+
+Dive deeper into QuadTap's capabilities:
+
+- **[Full Configuration Options (SettingsBuilder)](./docs/SETTINGS_BUILDER.md)**
+- **[VideoPlayerAdapter Guide](./docs/VIDEO_ADAPTER.md)**
+- **[Project Specification](./docs/SPEC.md)**
 
 ## Video Player Adapters
 
 QuadTap provides adapters for various video players:
 
 ### HTML5 Video
-
 ```javascript
 const adapter = VideoPlayerAdapter.forHtml5Video(videoElement, debug);
 ```
 
 ### YouTube
-
 ```javascript
 const adapter = VideoPlayerAdapter.forYouTube(youtubePlayer, debug);
 ```
 
 ### Vimeo
-
 ```javascript
 const adapter = VideoPlayerAdapter.forVimeo(vimeoPlayer, debug);
 ```
 
 ### Custom Player
-
+Integrate with any player using the custom adapter:
 ```javascript
 const adapter = VideoPlayerAdapter.custom({
   videoElement: customPlayer,
-  api: {
-    playMethod: (player) => player.play(),
-    pauseMethod: (player) => player.pause(),
-    seekMethod: (player, time) => player.seekTo(time),
-    getCurrentTimeMethod: (player) => player.getCurrentTime(),
-    getDurationMethod: (player) => player.getDuration(),
-    isPlayingMethod: (player) => player.isPlaying(),
-    getVideoIdMethod: (player) => player.getVideoId()
-  },
+  api: { /* ... your player's API methods ... */ },
   debug: true
 });
 ```
+Refer to the [VideoPlayerAdapter Documentation](./docs/VIDEO_ADAPTER.md) for details.
 
-## Configuration Options
+## Configuration Highlights
 
-QuadTap can be extensively configured using the SettingsBuilder. Here are some of the available options:
-
-### Container and Video
-
-```javascript
-builder.withContainer('video-container');
-builder.withVideoSelector('#my-video');
-builder.withDebug(true);
-builder.withAutoCancelTimeout(5000);
-```
-
-### Emojis
+Tailor QuadTap to your needs using the `SettingsBuilder`:
 
 ```javascript
-builder.withQuadrantEmojis({
-  topLeft: '🌈',
-  topRight: '🔥',
-  bottomLeft: '💧',
-  bottomRight: '🌪️'
-});
+// Example: Customizing emojis
+builder.withQuadrantEmojis({ topLeft: '💡', topRight: '🚀', bottomLeft: '🤔', bottomRight: '🎉' });
 
-builder.withThoughtEmojis({
-  topLeft: ['🌈', '🦄', '🌟', '🌻'],
-  topRight: ['🔥', '⚡', '💥', '🌋'],
-  bottomLeft: ['💧', '🌊', '❄️', '☔'],
-  bottomRight: ['🌪️', '🌩️', '⛈️', '🌀']
-});
-```
-
-### Video Controls
-
-```javascript
-builder.withVideoControls({
-  enabled: true,
-  position: 'center',
-  autoHide: true,
-  autoHideDelay: 2000,
-  pauseOnLightboxOnly: true
-});
-```
-
-### Navigation
-
-```javascript
-builder.withSwipeNavigation({
-  enabled: true,
-  threshold: 50,
-  direction: 'vertical'
-});
-```
-
-### Context Bars
-
-```javascript
-builder.withNorthContextBar({
-  enabled: true,
-  content: 'FROM'
-});
-
-builder.withSouthContextBar({
-  enabled: true,
-  content: 'TO'
-});
-```
-
-### Styling Options
-
-```javascript
-// Configure overlay colors
+// Example: Styling overlay colors
 builder.withOverlayColors({
-  background: 'rgba(240, 240, 245, 0.5)', // Light background
+  background: 'rgba(0, 0, 0, 0.6)',
   quadrantGradients: {
-    topLeft: 'rgba(0, 255, 255, 0.8)',    // Cyan
-    topRight: 'rgba(255, 255, 0, 0.8)',   // Yellow
-    bottomLeft: 'rgba(0, 255, 0, 0.8)',   // Green
-    bottomRight: 'rgba(255, 0, 255, 0.8)' // Magenta
+    topLeft: 'rgba(74, 144, 226, 0.7)',  // Blue
+    topRight: 'rgba(245, 166, 35, 0.7)', // Orange
+    bottomLeft: 'rgba(126, 211, 33, 0.7)',// Green
+    bottomRight: 'rgba(189, 16, 224, 0.7)'// Purple
   }
 });
-
-// Configure lightbox colors
-builder.withLightboxColors({
-  background: 'rgba(0, 0, 0, 0.9)',
-  text: 'white',
-  headerBackground: 'rgba(50, 50, 50, 0.8)',
-  buttonPrimary: '#4CAF50',
-  buttonSecondary: '#f44336'
-});
 ```
+For all options, see the [SettingsBuilder Documentation](./docs/SETTINGS_BUILDER.md).
 
-For a complete list of configuration options, see the [SettingsBuilder documentation](./docs/SETTINGS_BUILDER.md).
-
-## Mobile Support
-
-QuadTap is designed to work seamlessly on mobile devices with touch events:
-
-- Tap on video to activate overlay
-- Tap on bubble to open lightbox
-- Tap elsewhere to dismiss overlay
-- Swipe vertically to navigate between videos
-- Swipe horizontally for additional interactions (configurable)
-
-The lightbox is responsive and adapts to different screen sizes, ensuring a consistent experience across devices.
-
-## Percentage Rating System
-
-The lightbox includes a percentage rating system that allows users to provide more nuanced feedback:
-
-- 0-5 scale with 3 as the center point
-- Visual indicators using emojis (rockets for vertical rating, crowns for horizontal)
-- Percentage boxes show exact position values
-- Allows users to fine-tune their throwdown with precise positioning
-
-## Documentation
-
-- [SettingsBuilder Documentation](./docs/SETTINGS_BUILDER.md)
-- [VideoPlayerAdapter Documentation](./docs/VIDEO_ADAPTER.md)
-- [Specification](./docs/SPEC.md)
-
-## Examples
-
-See the [examples directory](./test) for complete examples of using QuadTap with different video players.
+## Swiping API
+QuadTap offers robust swipe gesture support. Configure custom behaviors for vertical and horizontal swipes on the video or overlay.
+Refer to the `withSwipeNavigation` and `withSwipeHandlers` options in the [SettingsBuilder Documentation](./docs/SETTINGS_BUILDER.md).
 
 ## Browser Support
 
-QuadTap supports all modern browsers:
+QuadTap supports all modern browsers: Chrome, Firefox, Safari, and Edge (latest versions).
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+## Contributing to QuadTap
 
-## Development
+We welcome contributions to QuadTap! Whether you're fixing bugs, improving documentation, or adding new features, your help is appreciated.
 
+**Ways to Contribute:**
+- **Report Issues**: Encounter a bug? Have a suggestion? Open an issue on GitHub.
+- **Submit Pull Requests**: Follow the development setup below, make your changes, and submit a PR.
+- **Improve Documentation**: Help us make our docs clearer and more comprehensive.
+
+**Development Setup:**
 ```bash
+# Clone the repository
+git clone https://github.com/wiber/QuadTap.git
+cd QuadTap
+
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (often watches for changes and rebuilds)
 npm start
 
 # Build for production
@@ -265,153 +169,27 @@ npm run build
 
 # Run tests
 npm test
-
-# Run it
-npm run
-
-# Run visual tests
-npm run test:visual
-
-# Just open it
-open dist-test/auto-init-test.html    
-open ./dist-test/overlay-swipe-test.html
-open ./dist-test/swipe-test.html 
 ```
-
-## Swiping API
-
-QuadTap provides comprehensive support for swipe gestures in all four directions (up, down, left, right), both on the video and when the overlay is active.
-
-### Swipe Directions and Default Behaviors
-
-| Direction | On Video | On Overlay | Default Action |
-|-----------|----------|------------|----------------|
-| **Up** | Activates overlay | Dismisses overlay | Navigates to previous video |
-| **Down** | Activates overlay | Dismisses overlay | Navigates to next video |
-| **Left** | Activates overlay | Custom action | Configurable (e.g., rewind) |
-| **Right** | Activates overlay | Custom action | Configurable (e.g., fast-forward) |
-
-### Configuring Swipe Behavior
-
-```javascript
-// Configure swipe behavior using SettingsBuilder
-const settings = new SettingsBuilder()
-  .withSwipeNavigation({
-    enabled: true,
-    threshold: 50,         // Minimum distance in pixels to trigger a swipe
-    direction: 'vertical', // 'vertical', 'horizontal', or 'both'
-    onVerticalSwipe: (direction, quadTap) => {
-      // Custom handler for vertical swipes (up/down)
-      if (direction === 'up') {
-        // Navigate to previous video
-        previousVideo();
-      } else {
-        // Navigate to next video
-        nextVideo();
-      }
-    },
-    onHorizontalSwipe: (direction, quadTap) => {
-      // Custom handler for horizontal swipes (left/right)
-      if (direction === 'left') {
-        // Rewind video
-        quadTap.getVideoPlayerAdapter().seek(
-          quadTap.getVideoPlayerAdapter().getCurrentTime() - 10
-        );
-      } else {
-        // Fast-forward video
-        quadTap.getVideoPlayerAdapter().seek(
-          quadTap.getVideoPlayerAdapter().getCurrentTime() + 10
-        );
-      }
-    }
-  })
-  .build();
-```
-
-### Swipe Detection on Overlay
-
-When the overlay is active, QuadTap detects swipes in all four directions:
-
-1. **Vertical Swipes (Up/Down)**: By default, vertical swipes dismiss the overlay and navigate to the previous/next video in the feed.
-2. **Horizontal Swipes (Left/Right)**: By default, horizontal swipes trigger custom actions defined by the host application.
-
-### Customizing Swipe Handlers
-
-You can provide custom handlers for swipe events to implement specific behaviors:
-
-```javascript
-const settings = new SettingsBuilder()
-  .withSwipeHandlers({
-    onSwipeUp: (quadTap) => {
-      console.log('Swiped up');
-      // Custom behavior for swipe up
-    },
-    onSwipeDown: (quadTap) => {
-      console.log('Swiped down');
-      // Custom behavior for swipe down
-    },
-    onSwipeLeft: (quadTap) => {
-      console.log('Swiped left');
-      // Custom behavior for swipe left
-    },
-    onSwipeRight: (quadTap) => {
-      console.log('Swiped right');
-      // Custom behavior for swipe right
-    }
-  })
-  .build();
-```
-
-### Testing Swipe Functionality
-
-QuadTap includes test pages for verifying swipe functionality:
-
-- **Basic Swipe Test**: Tests swipe detection in all four directions.
-- **Overlay Swipe Test**: Tests swipe interactions specifically when the overlay is active.
-
-These test pages provide visual feedback on detected swipe directions and detailed event logs.
+Please ensure your code adheres to the project's linting standards (if applicable) and that all tests pass before submitting a pull request.
 
 ## Future Development Roadmap
 
-The following features are planned for future releases:
+QuadTap is actively evolving. Here's a glimpse of what's planned:
 
-### Swiping API Enhancements
-- Swipe gesture visualization with directional indicators
-- Explanation in lightbox of how it was opened (tap vs. swipe)
+- **Enhanced Swiping API**: More granular control and visual feedback for swipe gestures.
+- **Advanced Mobile Experience**: Haptic feedback, improved gesture recognition.
+- **Lightbox Upgrades**: Dynamic emoji grids, refined UI/UX.
+- **Deeper Customization**: Theme support, animation controls.
+- **Broader Integrations**: More player adapters, component wrappers for frameworks like React/Vue.
+- **Accessibility Improvements**: Continued focus on ARIA standards and keyboard navigation.
 
-### Mobile Experience Improvements
-- Enhanced touch event handling
-- Haptic feedback support
-- Improved gesture recognition
-- Better support for various screen sizes and orientations
-
-### Lightbox Enhancements
-- Full-width responsive design
-- Dynamic emoji grid layout
-- Improved percentage indicators with visual feedback
-- Better integration with host applications
-
-### Styling and Customization
-- Option to use CSS classes instead of inline styles
-- Theme support with predefined color schemes
-- Animation customization options
-- Custom emoji sets and icon support
-
-### Integration Improvements
-- Enhanced event system for better host application integration
-- More video player adapters
-- React and Vue component wrappers
-- TypeScript type definitions
-
-### Accessibility Enhancements
-- Improved keyboard navigation
-- Better screen reader support
-- High contrast mode
-- Reduced motion option
+Our vision extends beyond these features, aiming to build foundational technologies for richer, more interactive digital experiences.
 
 ## Join the Development Team
 
-Want to contribute to the development of QuadTap or build similar value added or interactive video experiences? Visit [ThetaHire.com](https://www.ThetaHire.com) to join our team and help build the future of ... semantic parallelisation? - I mean video interaction. Definately that.
+Excited by the future of video interaction and building meaningful digital tools? QuadTap is part of a larger vision to create intuitive and powerful human-computer interfaces. If you're passionate about clean code, innovative UX, and pushing the boundaries of web technology, we'd love to hear from you.
+
+Visit [ThetaHire.com](https://www.ThetaHire.com) to explore opportunities and help shape the future of interaction.
 
 ## License
 

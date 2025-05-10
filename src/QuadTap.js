@@ -1376,10 +1376,10 @@ class QuadTap {
       const deltaY = currentY - self.state.touchStartY;
       const totalMovement = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       
-      // If movement exceeds threshold and not already detected as swiping, consider it a swipe
-      if (totalMovement > self.state.swipeThreshold && !self.state.isSwiping) {
-        self.state.isSwiping = true;
-        
+      // ULTRA AGGRESSIVE FIX: ANY movement at all (even 1 pixel) is considered a swipe
+      // This ensures that even the slightest movement won't toggle the overlay
+      if (totalMovement >= 1) {
+        self.log('SWIPE DETECTED - Movement: ' + totalMovement + 'px');
         // Determine swipe direction
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
           // Horizontal swipe
@@ -1389,21 +1389,36 @@ class QuadTap {
           self.state.swipeDirection = deltaY > 0 ? 'down' : 'up';
         }
         
-        self.log('Detected swipe at end', { 
-          direction: self.state.swipeDirection,
-          deltaX, 
-          deltaY, 
-          totalMovement,
-          overlayActive: self.state.active
-        });
+        // Mark as swiping to prevent tap actions
+        self.state.isSwiping = true;
         
-        // Handle swipe based on current state
-        self.handleSwipe(self.state.swipeDirection, evt);
+        // If movement exceeds the visual threshold, handle it as a full swipe
+        if (totalMovement > self.state.swipeThreshold) {
+          self.log('Detected swipe at end', { 
+            direction: self.state.swipeDirection,
+            deltaX, 
+            deltaY, 
+            totalMovement,
+            overlayActive: self.state.active
+          });
+          
+          // Handle swipe based on current state
+          self.handleSwipe(self.state.swipeDirection, evt);
+        } else {
+          self.log('Detected minor movement - treating as swipe', {
+            direction: self.state.swipeDirection,
+            deltaX,
+            deltaY,
+            totalMovement
+          });
+          // For minor movements, we still mark as swiping but don't trigger swipe actions
+          // This is the key to preventing overlay toggle on small movements
+        }
         return;
       }
       
-      // Only proceed with tap actions if not swiping
-      if (!self.state.isSwiping) {
+      // Only proceed with tap actions if absolutely NO movement (perfect tap)
+      if (totalMovement === 0) {
         const rect = self.elements.container.getBoundingClientRect();
         
         // Get coordinates relative to container
@@ -2028,9 +2043,9 @@ class QuadTap {
   deactivateOverlay(options = {}) {
     this.log('Deactivating overlay', options);
     
-    // Skip deactivation if this was triggered by a swipe
-    if (this.state.isSwiping && (!options || !options.force)) {
-      this.log('Skipping deactivation due to swipe');
+    // Allow deactivation from swipes if explicitly requested with reason='swipe'
+    if (this.state.isSwiping && (!options || !options.force) && (!options || options.reason !== 'swipe')) {
+      this.log('Skipping deactivation due to swipe without explicit reason');
       return;
     }
     
