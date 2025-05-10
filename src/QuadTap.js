@@ -1,4 +1,3 @@
-
 var t;
 t = () => ( () => {
     var t = {
@@ -1836,7 +1835,12 @@ t = () => ( () => {
                     e.stopPropagation())
                 };
                 this.elements.profileBubble.addEventListener("click", o),
-                this.elements.profileBubble.addEventListener("touchend", o);
+                this.elements.profileBubble.addEventListener("touchend", function(e) {
+                    // Prevent default touch behavior to avoid any issues with touch events
+                    e.preventDefault();
+                    // Call the original handler
+                    o(e);
+                });
                 var n = function(e) {
                     e.target === t.elements.lightBox && t.closeLightBox()
                 };
@@ -1869,6 +1873,36 @@ t = () => ( () => {
                     this.positionQuadrantEmojis(),
                     this.positionVideoControls(),
                     this.positionTooltip()
+                }
+                
+                // If lightbox is active, recalculate its max-height and max-width on resize
+                if (this.elements.lightBox && this.elements.lightBox.classList.contains('active') && this.elements.lightBoxContent) {
+                    var viewportWidth = window.innerWidth;
+                    var viewportHeight = window.innerHeight;
+                    
+                    // Calculate optimal dimensions based on viewport
+                    var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
+                    var maxHeight = viewportHeight * 0.85;
+                    
+                    // Apply responsive styles
+                    this.elements.lightBoxContent.style.maxWidth = maxWidth + 'px';
+                    this.elements.lightBoxContent.style.maxHeight = maxHeight + 'px';
+                    
+                    // Adjust top bezel and alignment for mobile
+                    if (viewportWidth < 768) {
+                        this.elements.lightBox.style.paddingTop = '5vh';
+                        this.elements.lightBox.style.alignItems = 'flex-start';
+                    } else {
+                        this.elements.lightBox.style.paddingTop = '0';
+                        this.elements.lightBox.style.alignItems = 'center';
+                    }
+                    
+                    if (this.config.debug) {
+                        this.log("Window resized, updated lightbox dimensions", {
+                            viewport: { width: viewportWidth, height: viewportHeight },
+                            lightbox: { maxWidth: maxWidth, maxHeight: maxHeight }
+                        });
+                    }
                 }
             }
         }, {
@@ -1909,6 +1943,12 @@ t = () => ( () => {
                 }
                 ), 10),
                 this.elements.profileBubble.style.display = "flex";
+                
+                // Apply responsive bubble size
+                var bubbleDimensions = this.calculateResponsiveBubbleSize();
+                this.elements.profileBubble.style.width = bubbleDimensions.width;
+                this.elements.profileBubble.style.height = bubbleDimensions.height;
+                
                 var r = this.state.containerDimensions.width * this.state.profileBubblePosition.x
                   , s = this.state.containerDimensions.height * this.state.profileBubblePosition.y;
                 n(this.elements.profileBubble, r, s),
@@ -1998,6 +2038,29 @@ t = () => ( () => {
                     defaultOpacity: "0.6",
                     enlargedOpacity: "0.8"
                 }
+            }
+        }, {
+            key: "calculateResponsiveBubbleSize",
+            value: function() {
+                // Get the smallest dimension to base bubble size on
+                var containerWidth = this.state.containerDimensions.width;
+                var containerHeight = this.state.containerDimensions.height;
+                var minDimension = Math.min(containerWidth, containerHeight);
+                
+                // Scale bubble size based on container dimensions
+                var bubbleSize;
+                if (minDimension < 300) {
+                    bubbleSize = 40; // Smaller bubbles for tiny containers
+                } else if (minDimension < 500) {
+                    bubbleSize = 50; // Medium bubbles for small containers
+                } else {
+                    bubbleSize = 60; // Default size for regular containers
+                }
+                
+                return {
+                    width: bubbleSize + 'px',
+                    height: bubbleSize + 'px'
+                };
             }
         }, {
             key: "positionQuadrantEmojis",
@@ -2188,6 +2251,36 @@ t = () => ( () => {
                 this.elements.lightBox.classList.add("active"),
                 this.state.autoCancelTimer && (clearTimeout(this.state.autoCancelTimer),
                 this.state.autoCancelTimer = null);
+
+                // ADDED: Calculate dynamic dimensions for responsive lightbox
+                var viewportWidth = window.innerWidth;
+                var viewportHeight = window.innerHeight;
+                
+                // Adjust lightbox content size based on viewport
+                if (this.elements.lightBoxContent) {
+                    // Calculate max dimensions - use smaller dimensions on mobile
+                    var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
+                    var maxHeight = viewportHeight * 0.85;
+                    
+                    // Apply responsive styles
+                    this.elements.lightBoxContent.style.maxWidth = maxWidth + 'px';
+                    this.elements.lightBoxContent.style.maxHeight = maxHeight + 'px';
+                    
+                    // Adjust top bezel and alignment for mobile
+                    if (viewportWidth < 768) {
+                        this.elements.lightBox.style.paddingTop = '5vh';
+                        this.elements.lightBox.style.alignItems = 'flex-start';
+                    } else {
+                        this.elements.lightBox.style.paddingTop = '0';
+                        this.elements.lightBox.style.alignItems = 'center';
+                    }
+                    
+                    this.log("Responsive lightbox dimensions set", {
+                        viewport: { width: viewportWidth, height: viewportHeight },
+                        lightbox: { maxWidth: maxWidth, maxHeight: maxHeight }
+                    });
+                }
+                
                 var e = this.config.videoPlayerApi && this.config.videoPlayerApi.enabled && this.config.videoPlayerApi.adapter;
                 if (this.state.wasPlayingBefore = !!e && e.isPlaying(),
                 !e) {
