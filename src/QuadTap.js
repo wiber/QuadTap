@@ -1063,7 +1063,8 @@ t = () => ( () => {
                 mediaRecorder: null,
                 recordingStartTime: 0,
                 recordingIndicator: null,
-                swipeDebounceTimer: null // Add this new property
+                swipeDebounceTimer: null, // For debounce timing
+                swipeProcessing: !1 // Add this to track active swipe processing
             },
             this.elements = {
                 container: null,
@@ -2048,6 +2049,12 @@ t = () => ( () => {
                 var handleSwipeEnd = function(e) {
                     var clientX, clientY;
                     
+                    // Skip processing if already handling a swipe
+                    if (t.state.swipeProcessing) {
+                        t.log("Ignoring swipe end during active processing");
+                        return;
+                    }
+                    
                     // If no start position recorded, this isn't a valid swipe
                     if (t.state.swipe.startX === 0 && t.state.swipe.startY === 0) {
                         return;
@@ -2122,15 +2129,19 @@ t = () => ( () => {
         }, {
             key: "handleSwipe",
             value: function(direction) {
-                // Debounce to prevent multiple calls in short succession
-                if (this.state.swipeDebounceTimer) {
+                // More aggressive debounce to prevent multiple calls
+                if (this.state.swipeProcessing) {
+                    this.log("Ignoring swipe during active processing", direction);
                     return; // Exit if a swipe is already being processed
                 }
                 
-                // Set debounce timer to prevent multiple rapid calls
-                this.state.swipeDebounceTimer = setTimeout(() => {
-                    this.state.swipeDebounceTimer = null;
-                }, 300); // 300ms debounce time
+                // Set processing flag immediately
+                this.state.swipeProcessing = true;
+                
+                // Clear any existing debounce timer
+                if (this.state.swipeDebounceTimer) {
+                    clearTimeout(this.state.swipeDebounceTimer);
+                }
                 
                 // Create swipe info text to display in the lightbox
                 var swipeInfo = "Swipe: " + direction.toUpperCase() + 
@@ -2147,6 +2158,12 @@ t = () => ( () => {
                     // Open the lightbox which will display swipe info
                     this.openLightBoxWithSwipeInfo(swipeInfo);
                 }
+                
+                // Set debounce timer to reset processing flag
+                this.state.swipeDebounceTimer = setTimeout(() => {
+                    this.state.swipeProcessing = false;
+                    this.state.swipeDebounceTimer = null;
+                }, 500); // Longer debounce time: 500ms
             }
         }, {
             key: "updateLightboxSwipeInfo",
@@ -2716,7 +2733,8 @@ t = () => ( () => {
         }, {
             key: "closeLightBox",
             value: function() {
-                var t = this;
+                var t = this; // Make sure t is initialized with this
+                
                 this.log("Closing light-box"),
                 this.elements.lightBox.classList.remove("active"),
                 this.videoTimeUpdateInterval && (clearInterval(this.videoTimeUpdateInterval),
@@ -2735,7 +2753,17 @@ t = () => ( () => {
                     t.elements.videoControls && t.elements.videoControlsObj && (t.elements.videoControlsObj.updatePlayPauseButton ? t.elements.videoControlsObj.updatePlayPauseButton(!0) : j(t.elements.videoControls, !0))
                 }
                 ), 100),
-                // this.state.wasPlayingBefore = !1, // QuadTap MOD: Removed wasPlayingBefore logic, video always plays.
+                // Clear swipe info when lightbox closes
+                this.state.swipeInfo = null,
+                this.state.swipeProcessing = false,
+                
+                // Find and remove any swipe info elements
+                this.elements.lightBoxContent && this.elements.lightBoxContent.querySelector('.swipe-info') && (
+                    this.elements.lightBoxContent.querySelector('.swipe-info').parentNode.removeChild(
+                        this.elements.lightBoxContent.querySelector('.swipe-info')
+                    )
+                ),
+                
                 this.deactivateOverlay() // QuadTap MOD: Ensure overlay is deactivated.
             }
         }, {
@@ -2908,7 +2936,8 @@ t = () => ( () => {
                     mediaRecorder: null,
                     recordingStartTime: 0,
                     recordingIndicator: null,
-                    swipeDebounceTimer: null // Add this new property
+                    swipeDebounceTimer: null,
+                    swipeProcessing: !1 // Add this new property
                 },
                 this.log("QuadTap destroyed")
             }
