@@ -7,7 +7,7 @@
 
 ## Live Demo
 
-**[Try the Live QuadTap Demo](https://htmlpreview.github.io/?https://github.com/wiber/QuadTap/blob/main/dist-vide-api-test.html)** - Interactive demo with swipeable functionality and full QuadTap features.
+**[Try the Live QuadTap Demo](https://htmlpreview.github.io/?https://github.com/wiber/QuadTap/blob/main/index.html)** - Interactive demo with swipeable functionality and full QuadTap features.
 
 ## Why QuadTap? The Motivation
 
