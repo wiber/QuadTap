@@ -5,6 +5,10 @@
 <!-- TODO: Add a compelling GIF here demonstrating QuadTap in action! -->
 ![QuadTap Demo](./docs/QuadTapDemo2.gif)
 
+## Live Demo
+
+**[Try the Live QuadTap Demo](https://htmlpreview.github.io/?https://github.com/wiber/QuadTap/blob/main/dist/index.html)** - Interactive demo with swipeable functionality and full QuadTap features.
+
 ## Why QuadTap? The Motivation
 
 In an increasingly video-driven world, standard video player interactions often fall short of providing deep, nuanced engagement. QuadTap was born from the need for a more intuitive, expressive, and ultimately more human way to interact with video content. It serves as a sophisticated interaction layer, enabling users to not just consume, but to react, comment, and connect with video moments in a uniquely spatial and contextual manner. This project is the first step towards a future where digital interactions are richer and more meaningful.
