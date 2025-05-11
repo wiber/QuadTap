@@ -1062,7 +1062,8 @@ t = () => ( () => {
                 mediaStream: null,
                 mediaRecorder: null,
                 recordingStartTime: 0,
-                recordingIndicator: null
+                recordingIndicator: null,
+                swipeDebounceTimer: null // Add this new property
             },
             this.elements = {
                 container: null,
@@ -2047,6 +2048,11 @@ t = () => ( () => {
                 var handleSwipeEnd = function(e) {
                     var clientX, clientY;
                     
+                    // If no start position recorded, this isn't a valid swipe
+                    if (t.state.swipe.startX === 0 && t.state.swipe.startY === 0) {
+                        return;
+                    }
+                    
                     if (e.type.includes('touch')) {
                         clientX = e.changedTouches[0].clientX;
                         clientY = e.changedTouches[0].clientY;
@@ -2061,6 +2067,10 @@ t = () => ( () => {
                     var deltaX = t.state.swipe.endX - t.state.swipe.startX;
                     var deltaY = t.state.swipe.endY - t.state.swipe.startY;
                     var elapsedTime = Date.now() - t.state.swipe.startTime;
+                    
+                    // Reset start position to prevent duplicate processing
+                    t.state.swipe.startX = 0;
+                    t.state.swipe.startY = 0;
                     
                     if (elapsedTime <= t.state.swipe.maxTime) {
                         var swipeDirection = "";
@@ -2112,6 +2122,16 @@ t = () => ( () => {
         }, {
             key: "handleSwipe",
             value: function(direction) {
+                // Debounce to prevent multiple calls in short succession
+                if (this.state.swipeDebounceTimer) {
+                    return; // Exit if a swipe is already being processed
+                }
+                
+                // Set debounce timer to prevent multiple rapid calls
+                this.state.swipeDebounceTimer = setTimeout(() => {
+                    this.state.swipeDebounceTimer = null;
+                }, 300); // 300ms debounce time
+                
                 // Create swipe info text to display in the lightbox
                 var swipeInfo = "Swipe: " + direction.toUpperCase() + 
                                "\nOverlay: " + (this.state.swipe.overlayActive ? "ACTIVE" : "INACTIVE") +
@@ -2855,6 +2875,7 @@ t = () => ( () => {
             value: function() {
                 this.log("Destroying QuadTap"),
                 this.state.autoCancelTimer && clearTimeout(this.state.autoCancelTimer),
+                this.state.swipeDebounceTimer && clearTimeout(this.state.swipeDebounceTimer), // Add this line
                 this.elements.container && this.elements.container.removeEventListener("click", this.handleContainerClick),
                 this.elements.profileBubble && this.elements.profileBubble.removeEventListener("click", this.handleBubbleClick),
                 this.elements.lightBox && this.elements.lightBox.removeEventListener("click", this.handleLightBoxClick),
@@ -2886,7 +2907,8 @@ t = () => ( () => {
                     mediaStream: null,
                     mediaRecorder: null,
                     recordingStartTime: 0,
-                    recordingIndicator: null
+                    recordingIndicator: null,
+                    swipeDebounceTimer: null // Add this new property
                 },
                 this.log("QuadTap destroyed")
             }
