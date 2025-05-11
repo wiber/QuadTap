@@ -212,11 +212,30 @@ t = () => ( () => {
         }
         function C(t, e, o) {
             var n = document.createElement("button");
-            return w(n, b),
-            n.textContent = t,
-            n.setAttribute("aria-label", e),
+            w(n, b);
             
-            // Add mouse events
+            // Detect if we're on mobile or small screen
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            var isSmallScreen = window.innerWidth < 768;
+            
+            // Apply responsive styles for buttons on mobile/small screens
+            if (isMobile || isSmallScreen) {
+                n.style.width = "26px";
+                n.style.height = "26px";
+                n.style.margin = "0 2px";
+                n.style.fontSize = "13px";
+            }
+            
+            // Fix alignment issues - using a single block of style definitions
+            n.style.display = "flex";
+            n.style.alignItems = "center";
+            n.style.justifyContent = "center";
+            n.style.lineHeight = "1";
+            n.style.padding = "0"; // Remove any default padding
+            n.style.verticalAlign = "middle";
+            
+            n.textContent = t;
+            n.setAttribute("aria-label", e);
             n.addEventListener("mouseenter", (function() {
                 w(n, v)
             })),
@@ -240,9 +259,9 @@ t = () => ( () => {
             }),
             n.addEventListener("touchcancel", function(e) {
                 n.style.backgroundColor = ""; // Reset style on touch cancel
-            }),
+            });
             
-            n
+            return n;
         }
         function j(t) {
             var n = o.method
@@ -593,13 +612,14 @@ t = () => ( () => {
         )))).apply(this, arguments)
     }
     var g = {
-        width: "70%",
-        maxWidth: "320px",
-        padding: "6px 10px",
+        width: "60%", // Adjusted from 70%
+        maxWidth: "350px", // Adjusted from 420px
+        height: "auto", 
+        padding: "6px 10px", // Slightly reduced padding
         borderRadius: "24px",
         backgroundColor: "rgba(0, 0, 0, 0.7)",
-        display: "flex",
-        justifyContent: "space-around",
+        display: "flex", 
+        justifyContent: "space-around", // Restored original space-around
         alignItems: "center",
         boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
         transition: "opacity 0.3s ease, width 0.3s ease, padding 0.3s ease"
@@ -618,16 +638,19 @@ t = () => ( () => {
         margin: "20px auto"
     }
       , b = {
-        width: "34px",
-        height: "34px",
-        margin: "0 3px",
+        width: "30px", // Adjusted from 32px
+        height: "30px", // Adjusted from 32px
+        margin: "0 3px", // Adjusted from 4px
         borderRadius: "50%",
         border: "none",
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         color: "white",
-        fontSize: "16px",
+        fontSize: "14px", // Adjusted from 15px
         cursor: "pointer",
         outline: "none",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         transition: "background-color 0.2s ease"
     }
       , v = {
@@ -667,14 +690,28 @@ t = () => ( () => {
           , y = t.isLightbox
           , x = void 0 !== y && y
           , j = document.createElement("div");
-        if (function(t, e) {
-            w(t, g),
-            w(t, e ? f : m)
-        }(j, x),
-        !x) {
+          
+        // Apply base styles
+        w(j, g);
+        w(j, x ? f : m);
+        
+        // Detect if we're on mobile or small screen
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var isSmallScreen = window.innerWidth < 768;
+        
+        // Apply responsive styles for mobile/small screens
+        if (isMobile || isSmallScreen) {
+            // Narrower on mobile but not too narrow
+            j.style.width = "65%";
+            j.style.maxWidth = "280px";
+            j.style.padding = "5px 8px";
+        }
+        
+        if (!x) {
             var T = parseInt(getComputedStyle(e).zIndex) || 1e3;
             j.style.zIndex = (T + 10).toString()
         }
+        
         var B = C("⟲" + d, "Rewind " + d + " seconds", i)
           , E = C("▶", "Play/Pause", (function(t) {
             var e = "▶" === E.textContent;
@@ -772,9 +809,30 @@ t = () => ( () => {
     }
     function C(t, e, o) {
         var n = document.createElement("button");
-        return w(n, b),
-        n.textContent = t,
-        n.setAttribute("aria-label", e),
+        w(n, b);
+        
+        // Detect if we're on mobile or small screen
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        var isSmallScreen = window.innerWidth < 768;
+        
+        // Apply responsive styles for buttons on mobile/small screens
+        if (isMobile || isSmallScreen) {
+            n.style.width = "26px";
+            n.style.height = "26px";
+            n.style.margin = "0 2px";
+            n.style.fontSize = "13px";
+        }
+        
+        // Fix alignment issues - using a single block of style definitions
+        n.style.display = "flex";
+        n.style.alignItems = "center";
+        n.style.justifyContent = "center";
+        n.style.lineHeight = "1";
+        n.style.padding = "0"; // Remove any default padding
+        n.style.verticalAlign = "middle";
+        
+        n.textContent = t;
+        n.setAttribute("aria-label", e);
         n.addEventListener("mouseenter", (function() {
             w(n, v)
         })),
@@ -798,9 +856,9 @@ t = () => ( () => {
         }),
         n.addEventListener("touchcancel", function(e) {
             n.style.backgroundColor = ""; // Reset style on touch cancel
-        }),
+        });
         
-        n
+        return n;
     }
     function j(t, e) {
         var o = t.querySelector("button:nth-child(2)");
@@ -2115,23 +2173,23 @@ t = () => ( () => {
                 var widthBasedSize;
                 
                 if (n < 200) {
-                    widthBasedSize = 0.8; // Very small screens
+                    widthBasedSize = 0.3; // Very small screens (was 0.4)
                 } else if (n < 300) {
-                    widthBasedSize = 1.0; // Small screens
+                    widthBasedSize = 0.4; // Small screens (was 0.5)
                 } else if (n < 400) {
-                    widthBasedSize = 1.2; // Medium-small screens
+                    widthBasedSize = 0.5; // Medium-small screens (was 0.6)
                 } else if (n < 600) {
-                    widthBasedSize = 1.5; // Medium screens
+                    widthBasedSize = 0.6; // Medium screens (was 0.7)
                 } else if (n < 800) {
-                    widthBasedSize = 1.8; // Medium-large screens
+                    widthBasedSize = 0.7; // Medium-large screens (was 0.8)
                 } else {
-                    widthBasedSize = 2.0; // Large screens
+                    widthBasedSize = 0.8; // Large screens (was 0.9)
                 }
                 
                 // Adjust size based on orientation
                 if (isPortrait && isMobile) {
                     // In portrait mode on mobile, make emojis smaller relative to width
-                    widthBasedSize *= 0.85;
+                    widthBasedSize *= 0.75; // Reduced from 0.85 to 0.75
                 }
                 
                 // Calculate final sizes
@@ -2211,36 +2269,46 @@ t = () => ( () => {
                   , e = t.defaultSize
                   , o = t.enlargedSize
                   , n = t.defaultOpacity
-                  , i = t.enlargedOpacity
-                  , a = this.elements.quadrantEmojis.topLeft;
+                  , i = t.enlargedOpacity;
+                
+                // Check if we're on a mobile device
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+                
+                // Use smaller corner spacing on mobile
+                var cornerSpacing = isMobile ? "3%" : "4%";
+                
+                var a = this.elements.quadrantEmojis.topLeft;
                 a.style.display = "block",
                 a.style.position = "absolute",
-                a.style.top = "8%",
-                a.style.left = "8%",
+                a.style.top = cornerSpacing,
+                a.style.left = cornerSpacing,
                 a.style.transform = "translate(-50%, -50%)",
                 a.style.fontSize = e,
                 a.style.opacity = n;
+                
                 var r = this.elements.quadrantEmojis.topRight;
                 r.style.display = "block",
                 r.style.position = "absolute",
-                r.style.top = "8%",
-                r.style.right = "8%",
+                r.style.top = cornerSpacing,
+                r.style.right = cornerSpacing,
                 r.style.transform = "translate(50%, -50%)",
                 r.style.fontSize = e,
                 r.style.opacity = n;
+                
                 var s = this.elements.quadrantEmojis.bottomLeft;
                 s.style.display = "block",
                 s.style.position = "absolute",
-                s.style.bottom = "8%",
-                s.style.left = "8%",
+                s.style.bottom = cornerSpacing,
+                s.style.left = cornerSpacing,
                 s.style.transform = "translate(-50%, 50%)",
                 s.style.fontSize = e,
                 s.style.opacity = n;
+                
                 var l = this.elements.quadrantEmojis.bottomRight;
                 if (l.style.display = "block",
                 l.style.position = "absolute",
-                l.style.bottom = "8%",
-                l.style.right = "8%",
+                l.style.bottom = cornerSpacing,
+                l.style.right = cornerSpacing,
                 l.style.transform = "translate(50%, 50%)",
                 l.style.fontSize = e,
                 l.style.opacity = n,

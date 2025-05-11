@@ -32,7 +32,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prestart": "node scripts/check-port.js",
-    "start": "npx http-server ./dist -p 8080 -c-1 --cors -o",
+    "start": "pkill -f http-server || true && npx http-server ./dist -p 8080 -c-1 --cors -o",
     "poststart": "node scripts/cleanup.js",
     "prepare": "npm run build",
     "lint": "eslint src --ext .js",
