@@ -1994,6 +1994,174 @@ t = () => ( () => {
                 ))),
                 window.addEventListener("resize", this.throttledResize),
                 this.updateContainerDimensions()
+
+                // Add swipe detection
+                this.addSwipeHandlers();
+            }
+        }, {
+            key: "addSwipeHandlers",
+            value: function() {
+                var t = this;
+                
+                // Initialize swipe state
+                this.state.swipe = {
+                    startX: 0,
+                    startY: 0,
+                    endX: 0,
+                    endY: 0,
+                    startTime: 0,
+                    onVideo: false,
+                    overlayActive: false,
+                    threshold: 50, // Min distance to be considered a swipe
+                    maxTime: 500 // Max time in ms for a gesture to be considered a swipe
+                };
+                
+                // Common handler for both desktop and mobile
+                var handleSwipeStart = function(e) {
+                    var clientX, clientY, targetElement;
+                    
+                    if (e.type.includes('touch')) {
+                        clientX = e.touches[0].clientX;
+                        clientY = e.touches[0].clientY;
+                        targetElement = document.elementFromPoint(clientX, clientY);
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                        targetElement = e.target;
+                    }
+                    
+                    t.state.swipe.startX = clientX;
+                    t.state.swipe.startY = clientY;
+                    t.state.swipe.startTime = Date.now();
+                    t.state.swipe.onVideo = targetElement === t.elements.video;
+                    t.state.swipe.overlayActive = t.state.active;
+                    
+                    t.log("Swipe start", {
+                        x: clientX,
+                        y: clientY,
+                        onVideo: t.state.swipe.onVideo,
+                        overlayActive: t.state.swipe.overlayActive
+                    });
+                };
+                
+                var handleSwipeEnd = function(e) {
+                    var clientX, clientY;
+                    
+                    if (e.type.includes('touch')) {
+                        clientX = e.changedTouches[0].clientX;
+                        clientY = e.changedTouches[0].clientY;
+                    } else {
+                        clientX = e.clientX;
+                        clientY = e.clientY;
+                    }
+                    
+                    t.state.swipe.endX = clientX;
+                    t.state.swipe.endY = clientY;
+                    
+                    var deltaX = t.state.swipe.endX - t.state.swipe.startX;
+                    var deltaY = t.state.swipe.endY - t.state.swipe.startY;
+                    var elapsedTime = Date.now() - t.state.swipe.startTime;
+                    
+                    if (elapsedTime <= t.state.swipe.maxTime) {
+                        var swipeDirection = "";
+                        var absX = Math.abs(deltaX);
+                        var absY = Math.abs(deltaY);
+                        
+                        // Determine swipe direction if threshold is met
+                        if (Math.max(absX, absY) >= t.state.swipe.threshold) {
+                            if (absX > absY) {
+                                swipeDirection = deltaX > 0 ? "right" : "left";
+                            } else {
+                                swipeDirection = deltaY > 0 ? "down" : "up";
+                            }
+                            
+                            t.log("Swipe detected", {
+                                direction: swipeDirection,
+                                onVideo: t.state.swipe.onVideo,
+                                overlayActive: t.state.swipe.overlayActive,
+                                deltaX: deltaX,
+                                deltaY: deltaY,
+                                time: elapsedTime
+                            });
+                            
+                            // Handle the swipe by opening lightbox with swipe info
+                            t.handleSwipe(swipeDirection);
+                        }
+                    }
+                };
+                
+                var handleSwipeMove = function(e) {
+                    // Optional: track movement for more complex gestures
+                    // For now we just prevent default to avoid scrolling
+                    if (e.cancelable) e.preventDefault();
+                };
+                
+                // Add mouse events for desktop
+                this.elements.container.addEventListener('mousedown', handleSwipeStart);
+                document.addEventListener('mouseup', handleSwipeEnd);
+                document.addEventListener('mousemove', function(e) {
+                    // Only track movement if mouse is down (potential swipe in progress)
+                    if (e.buttons === 1) handleSwipeMove(e);
+                });
+                
+                // Add touch events for mobile
+                this.elements.container.addEventListener('touchstart', handleSwipeStart, {passive: false});
+                this.elements.container.addEventListener('touchend', handleSwipeEnd);
+                this.elements.container.addEventListener('touchmove', handleSwipeMove, {passive: false});
+            }
+        }, {
+            key: "handleSwipe",
+            value: function(direction) {
+                // Create swipe info text to display in the lightbox
+                var swipeInfo = "Swipe: " + direction.toUpperCase() + 
+                               "\nOverlay: " + (this.state.swipe.overlayActive ? "ACTIVE" : "INACTIVE") +
+                               "\nOn Video: " + (this.state.swipe.onVideo ? "YES" : "NO");
+                
+                // Store swipe info for the lightbox to access
+                this.state.swipeInfo = swipeInfo;
+                
+                // If lightbox is already open, update the content
+                if (this.elements.lightBox && this.elements.lightBox.classList.contains('active')) {
+                    this.updateLightboxSwipeInfo(swipeInfo);
+                } else {
+                    // Open the lightbox which will display swipe info
+                    this.openLightBoxWithSwipeInfo(swipeInfo);
+                }
+            }
+        }, {
+            key: "updateLightboxSwipeInfo",
+            value: function(swipeInfo) {
+                // Update existing lightbox with swipe info
+                if (this.elements.lightBoxContent) {
+                    // Find or create swipe info container
+                    var swipeInfoElement = this.elements.lightBoxContent.querySelector('.swipe-info');
+                    if (!swipeInfoElement) {
+                        swipeInfoElement = document.createElement('div');
+                        swipeInfoElement.className = 'swipe-info';
+                        swipeInfoElement.style.padding = '10px';
+                        swipeInfoElement.style.marginTop = '15px';
+                        swipeInfoElement.style.backgroundColor = 'rgba(0,0,0,0.1)';
+                        swipeInfoElement.style.borderRadius = '5px';
+                        swipeInfoElement.style.fontFamily = 'monospace';
+                        swipeInfoElement.style.whiteSpace = 'pre';
+                        this.elements.lightBoxContent.appendChild(swipeInfoElement);
+                    }
+                    
+                    swipeInfoElement.textContent = swipeInfo;
+                }
+            }
+        }, {
+            key: "openLightBoxWithSwipeInfo",
+            value: function(swipeInfo) {
+                var t = this;
+                
+                // First open the normal lightbox
+                this.openLightBox();
+                
+                // Then add or update swipe info
+                setTimeout(function() {
+                    t.updateLightboxSwipeInfo(swipeInfo);
+                }, 100);
             }
         }, {
             key: "handleResize",
