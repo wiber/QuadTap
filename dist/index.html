@@ -1,0 +1,397 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quad-Tap Test</title><style>body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-top: 0;
+    }
+    
+    .video-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    
+    video {
+      width: 100%;
+      display: block;
+    }
+    
+    .controls {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    button {
+      padding: 8px 16px;
+      margin-right: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .event-log {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .event-log h3 {
+      margin-top: 0;
+    }
+    
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .log-entry:last-child {
+      border-bottom: none;
+    }
+    
+    .log-time {
+      color: #999;
+      font-size: 0.8em;
+    }
+    
+    .log-type {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+    
+    .log-type.info {
+      color: #2196F3;
+    }
+    
+    .log-type.error {
+      color: #f44336;
+    }
+    
+    .log-type.warn {
+      color: #ff9800;
+    }
+    
+    .log-type.success {
+      color: #4CAF50;
+    }
+    
+    .storage-viewer {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    
+    .storage-viewer h3 {
+      margin-top: 0;
+    }
+    
+    .storage-item {
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+    }
+    
+    .storage-key {
+      font-weight: bold;
+      color: #2196F3;
+    }
+    
+    .storage-value {
+      color: #333;
+    }
+    
+    .coordinates-display {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 9999;
+    }</style><script src="quad-tap.js"></script><script src="quad-tap.esm.js"></script></head><body><div class="container"><h1>Quad-Tap Test</h1><div class="video-container" id="main-video-droppable"><video id="main-video" controls data-video-id="test-video-123"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">Your browser does not support the video tag.</video></div><div class="controls"><button id="init-btn">Initialize QuadTap</button> <button id="destroy-btn">Destroy QuadTap</button> <button id="clear-log-btn">Clear Log</button> <button id="clear-storage-btn">Clear Storage</button></div><div class="event-log"><h3>Event Log</h3><div id="log-container"></div></div><div class="storage-viewer"><h3>Local Storage</h3><div id="storage-container"></div></div></div><div class="coordinates-display" id="coordinates-display">X: 0, Y: 0</div><script src="../dist/quad-tap.js"></script><script>// Initialize QuadTap
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize buttons
+      const initBtn = document.getElementById('init-btn');
+      const destroyBtn = document.getElementById('destroy-btn');
+      const clearLogBtn = document.getElementById('clear-log-btn');
+      const clearStorageBtn = document.getElementById('clear-storage-btn');
+      const logContainer = document.getElementById('log-container');
+      const storageContainer = document.getElementById('storage-container');
+      const coordinatesDisplay = document.getElementById('coordinates-display');
+      const videoElement = document.getElementById('main-video');
+      
+      // Track video state
+      let videoState = {
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        volume: 1
+      };
+      
+      // Update video state
+      function updateVideoState() {
+        videoState.isPlaying = !videoElement.paused;
+        videoState.currentTime = videoElement.currentTime;
+        videoState.duration = videoElement.duration;
+        videoState.volume = videoElement.volume;
+        
+        // Log video state changes if debug is enabled
+        if (window.quadTapDebug) {
+          console.log('[QuadTap] Video state updated', videoState);
+        }
+      }
+      
+      // Add video event listeners
+      videoElement.addEventListener('play', updateVideoState);
+      videoElement.addEventListener('pause', updateVideoState);
+      videoElement.addEventListener('timeupdate', function() {
+        videoState.currentTime = videoElement.currentTime;
+      });
+      videoElement.addEventListener('volumechange', function() {
+        videoState.volume = videoElement.volume;
+      });
+      
+      // Track mouse coordinates
+      document.addEventListener('mousemove', function(evt) {
+        coordinatesDisplay.textContent = `X: ${evt.clientX}, Y: ${evt.clientY}`;
+      });
+      
+      // Override console.log to capture QuadTap logs
+      const originalConsoleLog = console.log;
+      console.log = function() {
+        // Call original console.log
+        originalConsoleLog.apply(console, arguments);
+        
+        // Check if this is a QuadTap log
+        if (arguments.length > 0 && typeof arguments[0] === 'string' && arguments[0].includes('[QuadTap]')) {
+          // Add to log container
+          addLogEntry('info', arguments[0], arguments[1] || '');
+        }
+      };
+      
+      // Add log entry
+      function addLogEntry(type, message, data) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        
+        const time = new Date().toLocaleTimeString();
+        const logTime = document.createElement('span');
+        logTime.className = 'log-time';
+        logTime.textContent = `[${time}] `;
+        
+        const logType = document.createElement('span');
+        logType.className = `log-type ${type}`;
+        logType.textContent = type.toUpperCase();
+        
+        const logMessage = document.createElement('span');
+        logMessage.className = 'log-message';
+        logMessage.textContent = ` ${message}`;
+        
+        logEntry.appendChild(logTime);
+        logEntry.appendChild(logType);
+        logEntry.appendChild(logMessage);
+        
+        if (data) {
+          const logData = document.createElement('div');
+          logData.className = 'log-data';
+          logData.textContent = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+          logEntry.appendChild(logData);
+        }
+        
+        logContainer.appendChild(logEntry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+      
+      // Update storage viewer
+      function updateStorageViewer() {
+        storageContainer.innerHTML = '';
+        
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          
+          // Only show QuadTap storage items
+          if (key.startsWith('quadTap_')) {
+            const value = localStorage.getItem(key);
+            
+            const storageItem = document.createElement('div');
+            storageItem.className = 'storage-item';
+            
+            const storageKey = document.createElement('span');
+            storageKey.className = 'storage-key';
+            storageKey.textContent = key;
+            
+            const storageValue = document.createElement('span');
+            storageValue.className = 'storage-value';
+            storageValue.textContent = `: ${value}`;
+            
+            storageItem.appendChild(storageKey);
+            storageItem.appendChild(storageValue);
+            
+            storageContainer.appendChild(storageItem);
+          }
+        }
+      }
+      
+      // Initialize QuadTap
+      let quadTap = null;
+      window.quadTapDebug = true;
+      
+      initBtn.addEventListener('click', function() {
+        if (!quadTap) {
+          addLogEntry('info', 'Initializing QuadTap...');
+          
+          // Check if QuadTap is available
+          if (typeof QuadTap === 'undefined') {
+            addLogEntry('error', 'QuadTap is not defined. Make sure the bundle is loaded.');
+            return;
+          }
+          
+          // Initialize QuadTap with expanded configuration
+          quadTap = new QuadTap({
+            containerId: 'main-video-droppable',
+            videoSelector: '#main-video',
+            autoCancelTimeout: 5000,
+            debug: true,
+            // Custom emoji configuration
+            emojis: {
+              quadrants: {
+                topLeft: "🕊️",
+                topRight: "🌟",
+                bottomLeft: "🌧️",
+                bottomRight: "💥"
+              },
+              directional: {
+                up: "🚀",
+                right: "👑",
+                down: "⬇️",
+                left: "🤫"
+              },
+              thoughts: {
+                topLeft: ["🌸", "🎈", "🌦️", "🛤️"],
+                topRight: ["🌈", "✨", "🌤️", "🎆"],
+                bottomLeft: ["🍂", "🌙", "☔", "🗿"],
+                bottomRight: ["⚖️", "🏆", "⛈️", "💣"]
+              }
+            },
+            // Video control configuration
+            videoControls: {
+              enabled: true,
+              rewindTime: 30,
+              forwardTime: 30
+            },
+            callbacks: {
+              onOverlayActivate: function(x, y) {
+                addLogEntry('success', 'Overlay activated', { x, y });
+                addLogEntry('info', 'Video state at overlay activation', videoState);
+              },
+              onThrowDownInitiate: function(quadrant, x, y) {
+                addLogEntry('success', 'Throw-down initiated', { quadrant, x, y });
+                addLogEntry('info', 'Video state at throw-down initiation', videoState);
+              },
+              onThrowDownConfirm: function(quadrant, x, y, videoInfo) {
+                addLogEntry('success', 'Throw-down confirmed', { quadrant, x, y, videoInfo });
+                addLogEntry('info', 'Video state at throw-down confirmation', videoState);
+                updateStorageViewer();
+              },
+              onThrowDownCancel: function(quadrant) {
+                addLogEntry('warn', 'Throw-down canceled', { quadrant });
+                addLogEntry('info', 'Video state at throw-down cancellation', videoState);
+              },
+              onVideoControl: function(action, currentTime) {
+                addLogEntry('info', 'Video control action', { action, currentTime });
+                updateVideoState();
+              }
+            }
+          });
+          
+          // Expose the QuadTap instance globally for testing
+          window.quadTapInstance = quadTap;
+          
+          addLogEntry('success', 'QuadTap initialized and exposed as window.quadTapInstance');
+        } else {
+          addLogEntry('warn', 'QuadTap is already initialized');
+        }
+      });
+      
+      // Destroy QuadTap
+      destroyBtn.addEventListener('click', function() {
+        if (quadTap) {
+          quadTap.destroy();
+          quadTap = null;
+          addLogEntry('info', 'QuadTap destroyed');
+        } else {
+          addLogEntry('warn', 'QuadTap is not initialized');
+        }
+      });
+      
+      // Clear log
+      clearLogBtn.addEventListener('click', function() {
+        logContainer.innerHTML = '';
+        addLogEntry('info', 'Log cleared');
+      });
+      
+      // Clear storage
+      clearStorageBtn.addEventListener('click', function() {
+        // Clear only QuadTap storage items
+        const keysToRemove = [];
+        
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key.startsWith('quadTap_')) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => {
+          localStorage.removeItem(key);
+        });
+        
+        updateStorageViewer();
+        addLogEntry('info', 'Storage cleared');
+      });
+      
+      // Initialize storage viewer
+      updateStorageViewer();
+      
+      // Add initial log entry
+      addLogEntry('info', 'Test page loaded');
+    });</script></body></html>
