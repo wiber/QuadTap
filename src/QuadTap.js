@@ -1813,6 +1813,20 @@ t = () => ( () => {
                     quadrant: o,
                     index: n
                 });
+                
+                // Add the selected emoji to the comment text box
+                var commentTextarea = this.elements.commentBox && this.elements.commentBox.querySelector("textarea");
+                if (commentTextarea) {
+                    var currentText = commentTextarea.value || "";
+                    
+                    // Always add the emoji at the beginning, preserving any existing text
+                    commentTextarea.value = e + " " + currentText;
+                    
+                    // Trigger change event to ensure state is updated
+                    var event = new Event('input', { bubbles: true });
+                    commentTextarea.dispatchEvent(event);
+                }
+                
                 var i = document.querySelector(this.config.videoSelector);
                 if (i && (r("videoTime", i.currentTime),
                 r("videoId", i.getAttribute("data-video-id") || "unknown")),
