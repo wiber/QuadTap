@@ -1556,8 +1556,46 @@ t = () => ( () => {
                         }
                     }
                 });
+
+                // Create position display element
+                var positionDisplay = o("div", {
+                    className: "position-display",
+                    styles: {
+                        display: "inline-block",
+                        marginLeft: "15px",
+                        padding: "5px 10px",
+                        backgroundColor: "rgba(0,0,0,0.1)",
+                        borderRadius: "5px",
+                        fontSize: "0.9em",
+                        fontFamily: "monospace"
+                    }
+                });
+
+                // Format and set the position text directly
+                var xPos = t.state.profileBubblePosition.x;
+                var yPos = t.state.profileBubblePosition.y;
+
+                // If values are not available in state, try to get from localStorage
+                if (typeof xPos !== 'number' || typeof yPos !== 'number') {
+                    var storedPos = s('positionX');
+                    var storedPosY = s('positionY');
+                    if (storedPos !== null) xPos = parseFloat(storedPos);
+                    if (storedPosY !== null) yPos = parseFloat(storedPosY);
+                }
+
+                // Default to 50% if still no valid values
+                if (typeof xPos !== 'number') xPos = 0.5;
+                if (typeof yPos !== 'number') yPos = 0.5;
+
+                // Calculate percentages, inverting y-value so "up" is positive
+                var xPercent = Math.round(xPos * 100 * 100) / 100;
+                var yPercentUp = Math.round((1 - yPos) * 100 * 100) / 100; // Invert y so up is positive
+                positionDisplay.textContent = "Position: " + yPercentUp + "% up, " + xPercent + "% right";
+
+                // Add all elements to the media buttons container
                 h.appendChild(p),
                 h.appendChild(g),
+                h.appendChild(positionDisplay),
                 c.appendChild(h);
                 var m = o("div", {
                     className: "action-buttons"
@@ -1612,7 +1650,8 @@ t = () => ( () => {
                 this.elements.lightBoxContent = n,
                 this.elements.videoInfoDisplay = l,
                 this.elements.emojiGrid = d,
-                this.elements.commentBox = c
+                this.elements.commentBox = c,
+                this.elements.positionDisplay = positionDisplay;
             }
         }, {
             key: "createEmojiGrid",
@@ -2743,6 +2782,29 @@ t = () => ( () => {
                         this.log("Error updating play/pause button", t)
                     }
                 this.config.callbacks.onThrowDownInitiate && this.config.callbacks.onThrowDownInitiate(this.state.currentQuadrant, this.state.profileBubblePosition.x, this.state.profileBubblePosition.y)
+
+                // Update position display if it exists
+                if (this.elements.positionDisplay) {
+                    var xPos = this.state.profileBubblePosition.x;
+                    var yPos = this.state.profileBubblePosition.y;
+                    
+                    // If values are not available in state, try to get from localStorage
+                    if (typeof xPos !== 'number' || typeof yPos !== 'number') {
+                        var storedPos = s('positionX');
+                        var storedPosY = s('positionY');
+                        if (storedPos !== null) xPos = parseFloat(storedPos);
+                        if (storedPosY !== null) yPos = parseFloat(storedPosY);
+                    }
+                    
+                    // Default to 50% if still no valid values
+                    if (typeof xPos !== 'number') xPos = 0.5;
+                    if (typeof yPos !== 'number') yPos = 0.5;
+
+                    // Calculate percentages, inverting y-value so "up" is positive
+                    var xPercent = Math.round(xPos * 100 * 100) / 100;
+                    var yPercentUp = Math.round((1 - yPos) * 100 * 100) / 100; // Invert y so up is positive
+                    this.elements.positionDisplay.textContent = "Position: " + yPercentUp + "% up, " + xPercent + "% right";
+                }
             }
         }, {
             key: "closeLightBox",
