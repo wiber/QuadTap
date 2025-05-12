@@ -1590,7 +1590,84 @@ t = () => ( () => {
                 // Calculate percentages, inverting y-value so "up" is positive
                 var xPercent = Math.round(xPos * 100 * 100) / 100;
                 var yPercentUp = Math.round((1 - yPos) * 100 * 100) / 100; // Invert y so up is positive
-                positionDisplay.textContent = "Position: " + yPercentUp + "% up, " + xPercent + "% right";
+
+                // Create input elements for the percentages
+                var yInput = o("input", {
+                    className: "position-input",
+                    attributes: {
+                        type: "number",
+                        min: "0",
+                        max: "100",
+                        step: "0.1",
+                        value: yPercentUp.toString()
+                    },
+                    styles: {
+                        width: "45px",
+                        padding: "2px 4px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "0.9em",
+                        marginRight: "3px"
+                    },
+                    events: {
+                        change: function(e) {
+                            var newValue = parseFloat(e.target.value);
+                            if (!isNaN(newValue)) {
+                                // Convert back to y position (remember to invert)
+                                var newYPos = 1 - (newValue / 100);
+                                t.state.profileBubblePosition.y = newYPos;
+                                r("positionY", newYPos);
+                            }
+                        }
+                    }
+                });
+
+                var xInput = o("input", {
+                    className: "position-input",
+                    attributes: {
+                        type: "number",
+                        min: "0",
+                        max: "100",
+                        step: "0.1",
+                        value: xPercent.toString()
+                    },
+                    styles: {
+                        width: "45px",
+                        padding: "2px 4px",
+                        border: "1px solid #ccc",
+                        borderRadius: "3px",
+                        fontSize: "0.9em",
+                        marginRight: "3px"
+                    },
+                    events: {
+                        change: function(e) {
+                            var newValue = parseFloat(e.target.value);
+                            if (!isNaN(newValue)) {
+                                var newXPos = newValue / 100;
+                                t.state.profileBubblePosition.x = newXPos;
+                                r("positionX", newXPos);
+                            }
+                        }
+                    }
+                });
+
+                // Clear existing text and add formatted elements
+                positionDisplay.textContent = "";
+                positionDisplay.appendChild(document.createTextNode("Position: "));
+
+                // Up percentage with rocket emoji
+                positionDisplay.appendChild(document.createTextNode("🚀 "));
+                positionDisplay.appendChild(yInput);
+                positionDisplay.appendChild(document.createTextNode("% up, "));
+
+                // Right percentage with crown emoji
+                positionDisplay.appendChild(document.createTextNode("👑 "));
+                positionDisplay.appendChild(xInput);
+                positionDisplay.appendChild(document.createTextNode("% right"));
+
+                // Store references to inputs for later updates
+                t.elements.positionInputX = xInput;
+                t.elements.positionInputY = yInput;
 
                 // Add all elements to the media buttons container
                 h.appendChild(p),
@@ -2803,7 +2880,14 @@ t = () => ( () => {
                     // Calculate percentages, inverting y-value so "up" is positive
                     var xPercent = Math.round(xPos * 100 * 100) / 100;
                     var yPercentUp = Math.round((1 - yPos) * 100 * 100) / 100; // Invert y so up is positive
-                    this.elements.positionDisplay.textContent = "Position: " + yPercentUp + "% up, " + xPercent + "% right";
+
+                    // Update input values if inputs exist
+                    if (this.elements.positionInputY) {
+                        this.elements.positionInputY.value = yPercentUp.toString();
+                    }
+                    if (this.elements.positionInputX) {
+                        this.elements.positionInputX.value = xPercent.toString();
+                    }
                 }
             }
         }, {
