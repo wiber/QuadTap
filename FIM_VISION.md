@@ -1,8 +1,8 @@
-# FIM: INSURED PIXELS™ - THE TRILLION-DOLLAR OPPORTUNITY
+# FIM: INSURED PIXELS(C)™ - THE TRILLION-DOLLAR OPPORTUNITY
 
 ## Executive Summary
 
-FIM (Fractal Intelligence Matrix) has created the world's first Insured Pixels™ Marketplace - a revolutionary platform that transforms domain competence into standardized, tradable, and insurable digital assets. By combining (c/t)^n algorithmic efficiency with O(E) explainability, FIM enables both a thriving predictive competence marketplace and the first viable AI operational risk insurance market.
+FIM (Fractal Identity Map) has created the world's first Insured Pixels™ Marketplace - a revolutionary platform that transforms domain competence into standardized, tradable, and insurable digital assets. By combining (c/t)^n algorithmic efficiency with O(E) explainability, FIM enables both a thriving predictive competence marketplace and the first viable AI operational risk insurance market.
 
 The $2T trust deficit created by AI failures (causing 40% customer churn after incidents) has created urgent demand for verified, insurable AI components. FIM's patented (Pat Pend) Manhattan Walk™ technology transforms this crisis into opportunity by establishing predictive pixels as the universal currency of AI trust.
 
