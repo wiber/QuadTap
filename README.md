@@ -3,7 +3,7 @@
 **QuadTap is a pure JavaScript library that revolutionizes video engagement with a unique quad-tap overlay, designed for advanced video player integration and a richer user experience.**
 
 <!-- TODO: Add a compelling GIF here demonstrating QuadTap in action! -->
-![QuadTap Demo](./docs/QuadTapDemo2.gif)
+![QuadTap Demo](https://htmlpreview.github.io/?https://github.com/wiber/QuadTap/blob/main/docs/QuadTapDemo2.gif)
 
 ## Live Demo
 
