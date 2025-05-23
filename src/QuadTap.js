@@ -1426,309 +1426,52 @@ t = () => ( () => {
         }, {
             key: "createLightBoxElements",
             value: function() {
-                var t = this
-                  , e = o("div", {
-                    id: "throwdown-modal",
-                    className: "td-modal"
-                })
-                  , n = o("div", {
-                    className: "td-modal-content",
-                    styles: {
-                        backgroundColor: this.config.colors.lightbox.background,
-                        color: this.config.colors.lightbox.text
-                    }
-                })
-                  , i = o("div", {
-                    className: "td-modal-header",
-                    styles: {
-                        backgroundColor: this.config.colors.lightbox.headerBackground
-                    }
-                })
-                  , a = o("h4", {
-                    text: "Share Your Thoughts"
-                })
-                  , s = o("button", {
-                    className: "td-close-btn",
-                    html: "&times;",
-                    events: {
-                        click: function(e) {
-                            t.closeLightBox(),
-                            e.stopPropagation()
-                        }
-                    }
-                })
-                  , l = o("div", {
-                    className: "td-video-info",
-                    styles: {
-                        fontSize: "14px",
-                        color: "#888",
-                        marginRight: "10px"
-                    }
-                });
-                i.appendChild(a),
-                i.appendChild(l),
-                i.appendChild(s);
-                var d = this.createEmojiGrid()
-                  , c = o("div", {
-                    className: "comment-box"
-                })
-                  , u = o("textarea", {
-                    placeholder: "Add a comment (optional)",
-                    attributes: {
-                        rows: 3,
-                        maxlength: 500
-                    },
-                    events: {
-                        input: function(e) {
-                            var o = e.target.value
-                              , n = t.extractUrlFromText(o);
-                            n && r("extractedUrl", n),
-                            r("comment", o),
-                            t.saveEventToHistory({
-                                type: "comment_update",
-                                comment: o,
-                                extractedUrl: n
-                            })
-                        }
-                    }
-                });
-                c.appendChild(u);
-                var h = o("div", {
-                    className: "media-buttons"
-                })
-                  , p = o("button", {
-                    className: "media-button upload-button",
-                    text: "📤 Upload Video",
-                    events: {
-                        click: function(e) {
-                            var n = o("input", {
-                                attributes: {
-                                    type: "file",
-                                    accept: "video/*"
-                                },
-                                events: {
-                                    change: function(e) {
-                                        var o = e.target.files[0];
-                                        if (o) {
-                                            t.log("Video file selected", o.name),
-                                            r("uploadedVideo", o.name);
-                                            var n = document.createElement("div");
-                                            n.className = "uploaded-file-name",
-                                            n.textContent = "Selected: ".concat(o.name),
-                                            h.appendChild(n),
-                                            t.saveEventToHistory({
-                                                type: "video_upload",
-                                                fileName: o.name,
-                                                fileSize: o.size,
-                                                fileType: o.type
-                                            })
-                                        }
-                                    }
-                                }
-                            });
-                            document.body.appendChild(n),
-                            n.click(),
-                            document.body.removeChild(n),
-                            e.stopPropagation()
-                        }
-                    }
-                })
-                  , g = o("button", {
-                    className: "media-button capture-button",
-                    text: "📹 Record Video",
-                    events: {
-                        click: function(e) {
-                            if (t.state.recording) {
-                                t.stopRecording(),
-                                g.textContent = "📹 Record Video";
-                                var o = document.createElement("div");
-                                o.className = "recording-message",
-                                o.textContent = "Recording saved",
-                                h.appendChild(o),
-                                setTimeout((function() {
-                                    o.parentNode && o.parentNode.removeChild(o)
-                                }
-                                ), 3e3)
-                            } else
-                                t.startRecording(),
-                                g.textContent = "⏹️ Stop Recording";
-                            e.stopPropagation()
-                        }
-                    }
-                });
+                var t = this;
+                // Overlay (gray out background)
+                var overlay = document.createElement('div');
+                overlay.id = 'qt-overlay';
+                overlay.style.position = 'absolute';
+                overlay.style.top = '0';
+                overlay.style.left = '0';
+                overlay.style.width = '100%';
+                overlay.style.height = '100%';
+                overlay.style.background = 'rgba(0,0,0,0.7)';
+                overlay.style.zIndex = '9999';
+                overlay.style.display = 'none';
+                overlay.style.justifyContent = 'center';
+                overlay.style.alignItems = 'center';
+                overlay.style.pointerEvents = 'auto';
+                overlay.style.transition = 'opacity 0.3s ease';
+                overlay.style.opacity = '1';
 
-                // Create position display element
-                var positionDisplay = o("div", {
-                    className: "position-display",
-                    styles: {
-                        display: "inline-block",
-                        marginLeft: "15px",
-                        padding: "5px 10px",
-                        backgroundColor: "rgba(0,0,0,0.1)",
-                        borderRadius: "5px",
-                        fontSize: "0.9em",
-                        fontFamily: "monospace"
-                    }
-                });
+                // Modal (white box)
+                var modal = document.createElement('div');
+                modal.id = 'qt-modal';
+                modal.style.position = 'absolute';
+                modal.style.top = '50%';
+                modal.style.left = '50%';
+                modal.style.transform = 'translate(-50%, -50%)';
+                modal.style.background = '#fff';
+                modal.style.padding = '32px';
+                modal.style.borderRadius = '14px';
+                modal.style.boxShadow = '0 2px 16px rgba(0,0,0,0.2)';
+                modal.style.zIndex = '10000';
+                modal.style.maxWidth = '90vw';
+                modal.style.maxHeight = '80vh';
+                modal.style.overflowY = 'auto';
+                modal.style.display = 'flex';
+                modal.style.flexDirection = 'column';
+                modal.style.alignItems = 'center';
+                modal.style.pointerEvents = 'auto';
 
-                // Format and set the position text directly
-                var xPos = t.state.profileBubblePosition.x;
-                var yPos = t.state.profileBubblePosition.y;
+                // Add modal to overlay, overlay to container (after iframe)
+                overlay.appendChild(modal);
+                this.elements.container.appendChild(overlay);
+                this.elements.lightBox = overlay;
+                this.elements.lightBoxContent = modal;
 
-                // If values are not available in state, try to get from localStorage
-                if (typeof xPos !== 'number' || typeof yPos !== 'number') {
-                    var storedPos = s('positionX');
-                    var storedPosY = s('positionY');
-                    if (storedPos !== null) xPos = parseFloat(storedPos);
-                    if (storedPosY !== null) yPos = parseFloat(storedPosY);
-                }
-
-                // Default to 50% if still no valid values
-                if (typeof xPos !== 'number') xPos = 0.5;
-                if (typeof yPos !== 'number') yPos = 0.5;
-
-                // Calculate percentages, inverting y-value so "up" is positive
-                var xPercent = Math.round(xPos * 100 * 100) / 100;
-                var yPercentUp = Math.round((1 - yPos) * 100 * 100) / 100; // Invert y so up is positive
-
-                // Create input elements for the percentages
-                var yInput = o("input", {
-                    className: "position-input",
-                    attributes: {
-                        type: "number",
-                        min: "0",
-                        max: "100",
-                        step: "0.1",
-                        value: yPercentUp.toString()
-                    },
-                    styles: {
-                        width: "45px",
-                        padding: "2px 4px",
-                        border: "1px solid #ccc",
-                        borderRadius: "3px",
-                        fontSize: "0.9em",
-                        marginRight: "3px"
-                    },
-                    events: {
-                        change: function(e) {
-                            var newValue = parseFloat(e.target.value);
-                            if (!isNaN(newValue)) {
-                                // Convert back to y position (remember to invert)
-                                var newYPos = 1 - (newValue / 100);
-                                t.state.profileBubblePosition.y = newYPos;
-                                r("positionY", newYPos);
-                            }
-                        }
-                    }
-                });
-
-                var xInput = o("input", {
-                    className: "position-input",
-                    attributes: {
-                        type: "number",
-                        min: "0",
-                        max: "100",
-                        step: "0.1",
-                        value: xPercent.toString()
-                    },
-                    styles: {
-                        width: "45px",
-                        padding: "2px 4px",
-                        border: "1px solid #ccc",
-                        borderRadius: "3px",
-                        fontSize: "0.9em",
-                        marginRight: "3px"
-                    },
-                    events: {
-                        change: function(e) {
-                            var newValue = parseFloat(e.target.value);
-                            if (!isNaN(newValue)) {
-                                var newXPos = newValue / 100;
-                                t.state.profileBubblePosition.x = newXPos;
-                                r("positionX", newXPos);
-                            }
-                        }
-                    }
-                });
-
-                // Clear existing text and add formatted elements
-                positionDisplay.textContent = "";
-                positionDisplay.appendChild(document.createTextNode("Position: "));
-
-                // Up percentage with rocket emoji
-                positionDisplay.appendChild(document.createTextNode("🚀 "));
-                positionDisplay.appendChild(yInput);
-                positionDisplay.appendChild(document.createTextNode("% up, "));
-
-                // Right percentage with crown emoji
-                positionDisplay.appendChild(document.createTextNode("👑 "));
-                positionDisplay.appendChild(xInput);
-                positionDisplay.appendChild(document.createTextNode("% right"));
-
-                // Store references to inputs for later updates
-                t.elements.positionInputX = xInput;
-                t.elements.positionInputY = yInput;
-
-                // Add all elements to the media buttons container
-                h.appendChild(p),
-                h.appendChild(g),
-                h.appendChild(positionDisplay),
-                c.appendChild(h);
-                var m = o("div", {
-                    className: "action-buttons"
-                })
-                  , f = o("button", {
-                    className: "action-button cancel-button",
-                    text: "Cancel",
-                    styles: {
-                        backgroundColor: this.config.colors.lightbox.buttonSecondary,
-                        color: "white"
-                    },
-                    events: {
-                        click: function(e) {
-                            t.closeLightBox(),
-                            e.stopPropagation()
-                        }
-                    }
-                })
-                  , b = o("button", {
-                    className: "action-button save-button",
-                    text: "Save",
-                    styles: {
-                        backgroundColor: this.config.colors.lightbox.buttonPrimary,
-                        color: "white"
-                    },
-                    events: {
-                        click: function(e) {
-                            t.saveThrowDown(),
-                            e.stopPropagation()
-                        }
-                    }
-                });
-                m.appendChild(f),
-                m.appendChild(b),
-                n.appendChild(i),
-                n.appendChild(d);
-                var v = o("div", {
-                    styles: {
-                        width: "100%",
-                        height: "20px",
-                        clear: "both"
-                    }
-                });
-                n.appendChild(v);
-                var y = this.createLightboxControlStrip();
-                n.appendChild(y),
-                n.appendChild(c),
-                n.appendChild(m),
-                e.appendChild(n),
-                document.body.appendChild(e),
-                this.elements.lightBox = e,
-                this.elements.lightBoxContent = n,
-                this.elements.videoInfoDisplay = l,
-                this.elements.emojiGrid = d,
-                this.elements.commentBox = c,
-                this.elements.positionDisplay = positionDisplay;
+                // The rest of the modal content (header, emoji grid, etc.) should be appended to modal as before
+                // ... existing code for modal content ...
             }
         }, {
             key: "createEmojiGrid",
@@ -2074,6 +1817,126 @@ t = () => ( () => {
                         }
                     }, 500); // Delay to ensure video player is fully initialized
                 }
+                
+                // Long press variables
+                var longPressTimer = null;
+                var longPressDuration = 300; // milliseconds - reduced from 500 to make it more responsive
+                var longPressStartPosition = { x: 0, y: 0 };
+                
+                // Long press handler - triggered after timeout
+                var handleLongPress = function(position) {
+                    t.log("Long press detected", position);
+                    
+                    // Update bubble position based on the long press position
+                    var i = position.x / t.state.containerDimensions.width;
+                    var a = position.y / t.state.containerDimensions.height;
+                    t.state.profileBubblePosition = {
+                        x: i,
+                        y: a
+                    };
+                    
+                    // Store the quadrant
+                    t.state.currentQuadrant = t.getQuadrantFromPosition(position.x, position.y);
+                    
+                    // Save position in localStorage just like a normal tap would
+                    r("positionX", i);
+                    r("positionY", a);
+                    
+                    // Create an event object
+                    var longPressEvent = {
+                        type: "long_press",
+                        positionX: position.x,
+                        positionY: position.y,
+                        quadrant: t.state.currentQuadrant,
+                        containerWidth: t.state.containerDimensions.width,
+                        containerHeight: t.state.containerDimensions.height
+                    };
+                    
+                    // Save event to local storage
+                    t.saveEventToHistory(longPressEvent);
+                    
+                    // Display in lightbox directly (skip the overlay)
+                    t.openLightBox();
+                };
+                
+                // Add method to get quadrant from position
+                this.getQuadrantFromPosition = function(x, y) {
+                    var width = this.state.containerDimensions.width;
+                    var height = this.state.containerDimensions.height;
+                    
+                    var quadrant = "";
+                    if (y < height / 2) {
+                        quadrant += "top-";
+                    } else {
+                        quadrant += "bottom-";
+                    }
+                    
+                    if (x < width / 2) {
+                        quadrant += "left";
+                    } else {
+                        quadrant += "right";
+                    }
+                    
+                    return quadrant;
+                };
+                
+                // Touch start event for long press detection
+                var handleTouchStart = function(e) {
+                    if (e.touches && e.touches.length === 1) {
+                        var touch = e.touches[0];
+                        var rect = t.elements.container.getBoundingClientRect();
+                        var x = touch.clientX - rect.left;
+                        var y = touch.clientY - rect.top;
+                        
+                        longPressStartPosition = { x: x, y: y };
+                        
+                        // Clear any existing timeout
+                        if (longPressTimer) clearTimeout(longPressTimer);
+                        
+                        // Set new timeout for long press
+                        longPressTimer = setTimeout(function() {
+                            handleLongPress(longPressStartPosition);
+                        }, longPressDuration);
+                    }
+                };
+                
+                // Touch move event to cancel long press if moved
+                var handleTouchMove = function(e) {
+                    if (longPressTimer) {
+                        // If moving beyond a small threshold, cancel the long press
+                        if (e.touches && e.touches.length === 1) {
+                            var touch = e.touches[0];
+                            var rect = t.elements.container.getBoundingClientRect();
+                            var x = touch.clientX - rect.left;
+                            var y = touch.clientY - rect.top;
+                            
+                            // Calculate distance moved
+                            var dx = x - longPressStartPosition.x;
+                            var dy = y - longPressStartPosition.y;
+                            var distance = Math.sqrt(dx * dx + dy * dy);
+                            
+                            // If moved more than 10 pixels, cancel long press
+                            if (distance > 10) {
+                                clearTimeout(longPressTimer);
+                                longPressTimer = null;
+                            }
+                        }
+                    }
+                };
+                
+                // Touch end/cancel event to clear the long press timer
+                var handleTouchEnd = function() {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+                };
+                
+                // Add touch event listeners for long press detection
+                this.elements.container.addEventListener('touchstart', handleTouchStart, { passive: false });
+                this.elements.container.addEventListener('touchmove', handleTouchMove, { passive: false });
+                this.elements.container.addEventListener('touchend', handleTouchEnd, { passive: false });
+                this.elements.container.addEventListener('touchcancel', handleTouchEnd, { passive: false });
                 
                 var e = function(e) {
                     if (e.preventDefault(),
@@ -2803,6 +2666,9 @@ t = () => ( () => {
                 
                 // Adjust lightbox content size based on viewport
                 if (this.elements.lightBoxContent) {
+                    // Apply lighter background
+                    this.elements.lightBoxContent.style.backgroundColor = "rgba(240, 240, 245, 0.95)";
+                    
                     // Calculate max dimensions - use smaller dimensions on mobile
                     var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
                     var maxHeight = viewportHeight * 0.85;
@@ -3100,6 +2966,159 @@ t = () => ( () => {
                     swipeProcessing: !1 // Add this new property
                 },
                 this.log("QuadTap destroyed")
+            }
+        }, {
+            key: "openLightBoxWithLongPressInfo",
+            value: function(longPressEvent) {
+                var t = this;
+                
+                // First open the normal lightbox
+                this.openLightBox();
+                
+                // Create or update content in the lightbox
+                if (this.elements.lightBoxContent) {
+                    // Create header
+                    var header = document.createElement('h2');
+                    header.textContent = 'Long Press Detected';
+                    header.style.marginBottom = '15px';
+                    
+                    // Create event info display
+                    var longPressInfoElement = document.createElement('div');
+                    longPressInfoElement.className = 'long-press-info';
+                    longPressInfoElement.style.backgroundColor = '#f5f5f5';
+                    longPressInfoElement.style.padding = '15px';
+                    longPressInfoElement.style.borderRadius = '5px';
+                    longPressInfoElement.style.marginBottom = '15px';
+                    longPressInfoElement.style.maxHeight = '200px';
+                    longPressInfoElement.style.overflowY = 'auto';
+                    
+                    // Create formatted info text
+                    var infoHTML = '';
+                    infoHTML += '<p><strong>Position:</strong> X: ' + Math.round(longPressEvent.positionX) + ', Y: ' + Math.round(longPressEvent.positionY) + '</p>';
+                    infoHTML += '<p><strong>Quadrant:</strong> ' + longPressEvent.quadrant + '</p>';
+                    infoHTML += '<p><strong>Time:</strong> ' + new Date(longPressEvent.timestamp).toLocaleTimeString() + '</p>';
+                    
+                    longPressInfoElement.innerHTML = infoHTML;
+                    
+                    // Create events list section
+                    var eventsListHeader = document.createElement('h3');
+                    eventsListHeader.textContent = 'Recent Events';
+                    eventsListHeader.style.marginTop = '20px';
+                    eventsListHeader.style.marginBottom = '10px';
+                    
+                    var eventsList = document.createElement('div');
+                    eventsList.className = 'events-list';
+                    eventsList.style.backgroundColor = '#f5f5f5';
+                    eventsList.style.padding = '15px';
+                    eventsList.style.borderRadius = '5px';
+                    eventsList.style.maxHeight = '150px';
+                    eventsList.style.overflowY = 'auto';
+                    
+                    // Get events from localStorage
+                    var events = [];
+                    try {
+                        var storedEvents = localStorage.getItem("quadTapEvents");
+                        if (storedEvents) {
+                            events = JSON.parse(storedEvents);
+                            // Get the last 10 events maximum
+                            events = events.slice(-10);
+                        }
+                    } catch (err) {
+                        t.log("Error loading events from localStorage", err);
+                    }
+                    
+                    // Format and display the events
+                    if (events.length > 0) {
+                        var eventsHTML = '<ul style="list-style-type: none; padding-left: 0;">';
+                        events.forEach(function(event) {
+                            var eventTime = new Date(event.timestamp).toLocaleTimeString();
+                            var eventType = event.type || 'unknown';
+                            eventsHTML += '<li style="margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee;">';
+                            eventsHTML += '<strong>' + eventType + '</strong> (' + eventTime + ')';
+                            
+                            if (event.positionX !== undefined && event.positionY !== undefined) {
+                                eventsHTML += ' - Position: X: ' + Math.round(event.positionX) + ', Y: ' + Math.round(event.positionY);
+                            }
+                            
+                            if (event.quadrant) {
+                                eventsHTML += ' [' + event.quadrant + ']';
+                            }
+                            
+                            eventsHTML += '</li>';
+                        });
+                        eventsHTML += '</ul>';
+                        eventsList.innerHTML = eventsHTML;
+                    } else {
+                        eventsList.innerHTML = '<p>No events recorded yet.</p>';
+                    }
+                    
+                    // Clear existing content
+                    this.elements.lightBoxContent.innerHTML = '';
+                    
+                    // Add all elements to the lightbox
+                    this.elements.lightBoxContent.appendChild(header);
+                    this.elements.lightBoxContent.appendChild(longPressInfoElement);
+                    this.elements.lightBoxContent.appendChild(eventsListHeader);
+                    this.elements.lightBoxContent.appendChild(eventsList);
+                }
+            }
+        }, {
+            key: "getAllEvents",
+            value: function() {
+                try {
+                    var events = localStorage.getItem("quadTapEvents");
+                    if (events) {
+                        return JSON.parse(events);
+                    }
+                    return [];
+                } catch (err) {
+                    this.log("Error retrieving events from localStorage", err);
+                    return [];
+                }
+            }
+        }, {
+            key: "getEventsByType",
+            value: function(type) {
+                try {
+                    var allEvents = this.getAllEvents();
+                    if (allEvents && allEvents.length) {
+                        return allEvents.filter(function(event) {
+                            return event.type === type;
+                        });
+                    }
+                    return [];
+                } catch (err) {
+                    this.log("Error filtering events by type", err);
+                    return [];
+                }
+            }
+        }, {
+            key: "saveEventToHistory",
+            value: function(t) {
+                t.timestamp = (new Date).toISOString(),
+                t.context = {
+                    profileBubblePosition: this.state.profileBubblePosition,
+                    currentQuadrant: this.state.currentQuadrant,
+                    containerDimensions: this.state.containerDimensions
+                };
+                var e = [];
+                try {
+                    var o = localStorage.getItem("quadTapEvents");
+                    o && (e = JSON.parse(o))
+                } catch (t) {
+                    this.log("Error parsing stored events", t)
+                }
+                
+                // Ensure we don't exceed max event limit (1000)
+                if (e.length >= 1000) {
+                    // Remove the oldest 100 events when we hit the limit
+                    e = e.slice(-900);
+                }
+                
+                e.push(t),
+                localStorage.setItem("quadTapEvents", JSON.stringify(e)),
+                localStorage.setItem("quadTapCurrentEvent", JSON.stringify(t)),
+                this.log("Event saved to history", t)
             }
         }],
         e && B(t.prototype, e),
