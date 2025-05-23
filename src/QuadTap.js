@@ -1456,22 +1456,259 @@ t = () => ( () => {
                 modal.style.borderRadius = '14px';
                 modal.style.boxShadow = '0 2px 16px rgba(0,0,0,0.2)';
                 modal.style.zIndex = '10000';
-                modal.style.maxWidth = '90vw';
+                modal.style.maxWidth = '95vw';
                 modal.style.maxHeight = '80vh';
                 modal.style.overflowY = 'auto';
                 modal.style.display = 'flex';
                 modal.style.flexDirection = 'column';
                 modal.style.alignItems = 'center';
                 modal.style.pointerEvents = 'auto';
+                modal.style.minWidth = '600px';
+
+                // Create header
+                var header = document.createElement('h2');
+                header.textContent = 'QuadTap Input';
+                header.style.marginBottom = '20px';
+                header.style.color = '#333';
+                header.style.textAlign = 'center';
+                modal.appendChild(header);
+
+                // Create position inputs container
+                var positionContainer = document.createElement('div');
+                positionContainer.style.display = 'flex';
+                positionContainer.style.gap = '20px';
+                positionContainer.style.marginBottom = '20px';
+                positionContainer.style.alignItems = 'center';
+
+                // X position input
+                var xLabel = document.createElement('label');
+                xLabel.textContent = 'X%: ';
+                xLabel.style.fontWeight = 'bold';
+                var xInput = document.createElement('input');
+                xInput.type = 'number';
+                xInput.min = '0';
+                xInput.max = '100';
+                xInput.value = '50';
+                xInput.style.width = '80px';
+                xInput.style.padding = '8px';
+                xInput.style.border = '2px solid #ddd';
+                xInput.style.borderRadius = '4px';
+                xInput.style.fontSize = '16px';
+                this.elements.positionInputX = xInput;
+
+                // Y position input
+                var yLabel = document.createElement('label');
+                yLabel.textContent = 'Y%: ';
+                yLabel.style.fontWeight = 'bold';
+                var yInput = document.createElement('input');
+                yInput.type = 'number';
+                yInput.min = '0';
+                yInput.max = '100';
+                yInput.value = '50';
+                yInput.style.width = '80px';
+                yInput.style.padding = '8px';
+                yInput.style.border = '2px solid #ddd';
+                yInput.style.borderRadius = '4px';
+                yInput.style.fontSize = '16px';
+                this.elements.positionInputY = yInput;
+
+                positionContainer.appendChild(xLabel);
+                positionContainer.appendChild(xInput);
+                positionContainer.appendChild(yLabel);
+                positionContainer.appendChild(yInput);
+                modal.appendChild(positionContainer);
+
+                // Create emoji grid
+                var emojiGrid = this.createEmojiGrid();
+                emojiGrid.style.marginBottom = '20px';
+                modal.appendChild(emojiGrid);
+                this.elements.emojiGrid = emojiGrid;
+
+                // Create comment box
+                var commentBox = document.createElement('div');
+                commentBox.style.width = '100%';
+                commentBox.style.marginBottom = '20px';
+                
+                var commentLabel = document.createElement('label');
+                commentLabel.textContent = 'Comment:';
+                commentLabel.style.display = 'block';
+                commentLabel.style.marginBottom = '8px';
+                commentLabel.style.fontWeight = 'bold';
+                
+                var commentTextarea = document.createElement('textarea');
+                commentTextarea.rows = 4;
+                commentTextarea.style.width = '100%';
+                commentTextarea.style.padding = '10px';
+                commentTextarea.style.border = '2px solid #ddd';
+                commentTextarea.style.borderRadius = '4px';
+                commentTextarea.style.fontSize = '14px';
+                commentTextarea.style.resize = 'vertical';
+                commentTextarea.placeholder = 'Add your comment here...';
+                
+                commentBox.appendChild(commentLabel);
+                commentBox.appendChild(commentTextarea);
+                modal.appendChild(commentBox);
+                this.elements.commentBox = commentBox;
+
+                // Create media upload section
+                var mediaSection = document.createElement('div');
+                mediaSection.style.width = '100%';
+                mediaSection.style.marginBottom = '20px';
+                
+                var mediaLabel = document.createElement('label');
+                mediaLabel.textContent = 'Media:';
+                mediaLabel.style.display = 'block';
+                mediaLabel.style.marginBottom = '8px';
+                mediaLabel.style.fontWeight = 'bold';
+                
+                var mediaButtons = document.createElement('div');
+                mediaButtons.className = 'media-buttons';
+                mediaButtons.style.display = 'flex';
+                mediaButtons.style.gap = '10px';
+                mediaButtons.style.marginBottom = '10px';
+                
+                // File upload button
+                var uploadButton = document.createElement('button');
+                uploadButton.textContent = '📁 Upload File';
+                uploadButton.className = 'upload-button';
+                uploadButton.style.padding = '8px 12px';
+                uploadButton.style.backgroundColor = '#3498db';
+                uploadButton.style.color = 'white';
+                uploadButton.style.border = 'none';
+                uploadButton.style.borderRadius = '4px';
+                uploadButton.style.cursor = 'pointer';
+                uploadButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = 'image/*,video/*';
+                    fileInput.style.display = 'none';
+                    fileInput.addEventListener('change', function(e) {
+                        if (e.target.files && e.target.files[0]) {
+                            var file = e.target.files[0];
+                            t.log('File uploaded', { name: file.name, size: file.size, type: file.type });
+                            // Store file reference
+                            r('uploadedFile', file.name);
+                            r('uploadedFileType', file.type);
+                            // Show uploaded file name
+                            var fileName = document.createElement('div');
+                            fileName.className = 'uploaded-file-name';
+                            fileName.textContent = '📎 ' + file.name;
+                            fileName.style.marginTop = '5px';
+                            fileName.style.padding = '5px';
+                            fileName.style.backgroundColor = '#f1f1f1';
+                            fileName.style.borderRadius = '3px';
+                            fileName.style.fontSize = '0.9rem';
+                            mediaSection.appendChild(fileName);
+                        }
+                    });
+                    document.body.appendChild(fileInput);
+                    fileInput.click();
+                    document.body.removeChild(fileInput);
+                });
+                
+                // Video capture button
+                var captureButton = document.createElement('button');
+                captureButton.textContent = '🎥 Record Video';
+                captureButton.className = 'capture-button';
+                captureButton.style.padding = '8px 12px';
+                captureButton.style.backgroundColor = '#e74c3c';
+                captureButton.style.color = 'white';
+                captureButton.style.border = 'none';
+                captureButton.style.borderRadius = '4px';
+                captureButton.style.cursor = 'pointer';
+                captureButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                            if (t.state.recording) {
+                        t.stopRecording();
+                        captureButton.textContent = '🎥 Record Video';
+                    } else {
+                        t.startRecording();
+                        captureButton.textContent = '⏹️ Stop Recording';
+                    }
+                });
+                
+                mediaButtons.appendChild(uploadButton);
+                mediaButtons.appendChild(captureButton);
+                
+                mediaSection.appendChild(mediaLabel);
+                mediaSection.appendChild(mediaButtons);
+                modal.appendChild(mediaSection);
+                this.elements.mediaSection = mediaSection;
+
+                // Create buttons container
+                var buttonsContainer = document.createElement('div');
+                buttonsContainer.style.display = 'flex';
+                buttonsContainer.style.gap = '10px';
+                buttonsContainer.style.justifyContent = 'center';
+
+                // Save button
+                var saveButton = document.createElement('button');
+                saveButton.textContent = 'Save';
+                saveButton.style.padding = '10px 20px';
+                saveButton.style.backgroundColor = '#4CAF50';
+                saveButton.style.color = 'white';
+                saveButton.style.border = 'none';
+                saveButton.style.borderRadius = '4px';
+                saveButton.style.cursor = 'pointer';
+                saveButton.style.fontSize = '16px';
+                saveButton.addEventListener('click', function() {
+                    t.saveThrowDown();
+                });
+
+                // Cancel button
+                var cancelButton = document.createElement('button');
+                cancelButton.textContent = 'Cancel';
+                cancelButton.style.padding = '10px 20px';
+                cancelButton.style.backgroundColor = '#f44336';
+                cancelButton.style.color = 'white';
+                cancelButton.style.border = 'none';
+                cancelButton.style.borderRadius = '4px';
+                cancelButton.style.cursor = 'pointer';
+                cancelButton.style.fontSize = '16px';
+                cancelButton.addEventListener('click', function() {
+                    t.closeLightBox();
+                });
+
+                buttonsContainer.appendChild(saveButton);
+                buttonsContainer.appendChild(cancelButton);
+                modal.appendChild(buttonsContainer);
+
+                // Make overlay show/hide the modal
+                overlay.style.display = 'flex';
+                overlay.style.visibility = 'hidden';
+                
+                // Show overlay when 'active' class is added
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                            if (overlay.classList.contains('active')) {
+                                overlay.style.visibility = 'visible';
+                                overlay.style.display = 'flex';
+                            } else {
+                                overlay.style.visibility = 'hidden';
+                                setTimeout(function() {
+                                    if (!overlay.classList.contains('active')) {
+                                        overlay.style.display = 'none';
+                                    }
+                                }, 300);
+                        }
+                    }
+                });
+                });
+                observer.observe(overlay, { attributes: true });
 
                 // Add modal to overlay, overlay to container (after iframe)
                 overlay.appendChild(modal);
-                this.elements.container.appendChild(overlay);
+                
+                // Append to document.body for full-screen overlay, not to container
+                document.body.appendChild(overlay);
+                
+                // Also change positioning to fixed for proper full-screen behavior
+                overlay.style.position = 'fixed';
+                
                 this.elements.lightBox = overlay;
                 this.elements.lightBoxContent = modal;
-
-                // The rest of the modal content (header, emoji grid, etc.) should be appended to modal as before
-                // ... existing code for modal content ...
             }
         }, {
             key: "createEmojiGrid",
@@ -2727,7 +2964,7 @@ t = () => ( () => {
                 this.config.callbacks.onThrowDownInitiate && this.config.callbacks.onThrowDownInitiate(this.state.currentQuadrant, this.state.profileBubblePosition.x, this.state.profileBubblePosition.y)
 
                 // Update position display if it exists
-                if (this.elements.positionDisplay) {
+                if (this.elements.positionInputX && this.elements.positionInputY) {
                     var xPos = this.state.profileBubblePosition.x;
                     var yPos = this.state.profileBubblePosition.y;
                     
