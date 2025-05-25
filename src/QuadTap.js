@@ -1464,6 +1464,11 @@ t = () => ( () => {
                 modal.style.alignItems = 'center';
                 modal.style.pointerEvents = 'auto';
                 modal.style.minWidth = '600px';
+                
+                // Simple React compatibility - prevent event bubbling
+                modal.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
 
                 // Create header
                 var header = document.createElement('h2');
@@ -2449,9 +2454,9 @@ t = () => ( () => {
                     var viewportWidth = window.innerWidth;
                     var viewportHeight = window.innerHeight;
                     
-                    // Calculate optimal dimensions based on viewport
-                    var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
-                    var maxHeight = viewportHeight * 0.85;
+                    // Calculate max dimensions - use larger dimensions for better video accommodation
+                    var maxWidth = Math.min(viewportWidth * 0.9, viewportWidth < 768 ? 700 : 1200);
+                    var maxHeight = viewportHeight * 0.9;
                     
                     // Apply responsive styles
                     this.elements.lightBoxContent.style.maxWidth = maxWidth + 'px';
@@ -2906,9 +2911,9 @@ t = () => ( () => {
                     // Apply white background
                     this.elements.lightBoxContent.style.backgroundColor = "#ffffff";
                     
-                    // Calculate max dimensions - use smaller dimensions on mobile
-                    var maxWidth = Math.min(viewportWidth * 0.95, viewportWidth < 768 ? 600 : 800);
-                    var maxHeight = viewportHeight * 0.85;
+                    // Calculate max dimensions - use larger dimensions for better video accommodation
+                    var maxWidth = Math.min(viewportWidth * 0.9, viewportWidth < 768 ? 700 : 1200);
+                    var maxHeight = viewportHeight * 0.9;
                     
                     // Apply responsive styles
                     this.elements.lightBoxContent.style.maxWidth = maxWidth + 'px';
