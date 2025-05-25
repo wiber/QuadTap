@@ -108,7 +108,7 @@ export function injectStyles() {
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(23, 32, 42, 0.7);
       z-index: 2000;
       justify-content: center;
       align-items: center;
@@ -184,7 +184,7 @@ export function injectStyles() {
     }
     
     .emoji-quadrant.top-left {
-      background-color: rgba(0, 255, 255, 0.2);
+      background-color: rgba(0, 255, 0, 0.2);
     }
     
     .emoji-quadrant.top-right {
@@ -192,7 +192,7 @@ export function injectStyles() {
     }
     
     .emoji-quadrant.bottom-left {
-      background-color: rgba(0, 255, 0, 0.2);
+      background-color: rgba(0, 255, 255, 0.2);
     }
     
     .emoji-quadrant.bottom-right {

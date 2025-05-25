@@ -90,7 +90,7 @@ class SettingsBuilder {
           }
         },
         lightbox: {
-          background: 'rgba(0, 0, 0, 0.9)', // Lightbox background color
+          background: 'rgba(23, 32, 42, 0.7)', // Increased opacity for more prominent overlay
           text: 'white', // Lightbox text color
           headerBackground: 'rgba(50, 50, 50, 0.8)', // Lightbox header background
           buttonPrimary: '#4CAF50', // Primary button color (Save)
