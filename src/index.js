@@ -14,6 +14,13 @@ window.quadTapInitialized = false;
 
 // Auto-initialization function
 const autoInitialize = () => {
+  // If the React root element for mui-debug-app exists, do not auto-initialize plain JS QuadTap.
+  // This helps prevent conflicts on pages dedicated to the React component version.
+  if (document.getElementById('root')) {
+    console.log('[QuadTap] React root element (#root) found, skipping plain JS auto-initialization.');
+    return;
+  }
+
   // If already initialized, don't initialize again
   if (window.quadTapInitialized) {
     console.log('[QuadTap] Already initialized, skipping auto-initialization');

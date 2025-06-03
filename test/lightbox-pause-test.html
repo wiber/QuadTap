@@ -101,6 +101,28 @@
       <button id="activate-overlay">Activate Overlay</button>
       <button id="open-lightbox">Open Lightbox</button>
       <button id="close-lightbox">Close Lightbox</button>
+      <!-- New button for MUI-like lightbox -->
+      <button id="open-mui-lightbox">Open MUI Lightbox</button>
+    </div>
+    
+    <!-- MUI-like Lightbox Structure -->
+    <div id="mui-lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; text-align: center;">
+      <div style="background-color: white; padding: 20px; border-radius: 5px; max-width: 900px; width: 90%; display: inline-block; text-align: left;">
+        <button id="close-mui-lightbox" style="float: right;">Close</button>
+        <h2>MUI Lightbox with QuadTap</h2>
+        <div class="video-container" id="mui-video-droppable" style="max-width: 100%;">
+          <video id="mui-video" width="640" height="360" data-video-id="mui-quadtap-video" style="max-width: 100%; height: auto;">
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="controls" id="mui-lightbox-controls" style="margin-top: 10px; justify-content: center;">
+          <button id="mui-play">Play</button>
+          <button id="mui-pause">Pause</button>
+          <button id="mui-rewind">Rewind 10s</button>
+          <button id="mui-ff">FF 10s</button>
+        </div>
+      </div>
     </div>
     
     <div class="event-log">
@@ -191,6 +213,95 @@
       document.getElementById('close-lightbox').addEventListener('click', () => {
         addLogEntry('Closing lightbox');
         quadTap.closeLightBox();
+      });
+      
+      // New elements for MUI-like lightbox test
+      const openMuiLightboxBtn = document.getElementById('open-mui-lightbox');
+      const closeMuiLightboxBtn = document.getElementById('close-mui-lightbox');
+      const muiLightbox = document.getElementById('mui-lightbox');
+      const muiVideo = document.getElementById('mui-video');
+
+      addLogEntry('Initializing MUI QuadTap instance');
+      // Initialize the second QuadTap instance for the MUI lightbox
+      const quadTapMui = new QuadTap({
+        containerId: 'mui-video-droppable',
+        videoSelector: '#mui-video',
+        debug: true, // Keep debug true for testing
+        colors: { 
+          overlay: {
+            background: 'rgba(200, 200, 255, 0.5)', // Light blueish background
+            quadrantGradients: { // Distinct colors for the new instance
+              topLeft: 'rgba(255, 0, 0, 0.7)',     // Strong Red
+              topRight: 'rgba(0, 0, 255, 0.7)',    // Strong Blue
+              bottomLeft: 'rgba(255, 165, 0, 0.7)', // Strong Orange
+              bottomRight: 'rgba(128, 0, 128, 0.7)' // Strong Purple
+            }
+          }
+        }
+      });
+      window.quadTapMui = quadTapMui; 
+      addLogEntry('MUI QuadTap instance initialized');
+
+      let mainVideoWasPlaying = false; // To remember the state of the main video
+
+      openMuiLightboxBtn.addEventListener('click', () => {
+        addLogEntry('Open MUI Lightbox button clicked');
+        if (video.paused) {
+          mainVideoWasPlaying = false;
+          addLogEntry('Main video was already paused when MUI lightbox opened.');
+        } else {
+          mainVideoWasPlaying = true;
+          addLogEntry('Main video is playing. Pausing it for MUI lightbox.');
+          video.pause(); 
+        }
+        muiLightbox.style.display = 'flex'; 
+        addLogEntry('MUI lightbox displayed');
+        // Autoplay video in MUI lightbox
+        muiVideo.play(); 
+      });
+
+      closeMuiLightboxBtn.addEventListener('click', () => {
+        addLogEntry('Close MUI Lightbox button clicked');
+        muiLightbox.style.display = 'none'; 
+        muiVideo.pause(); // Pause video in MUI lightbox when closing
+        addLogEntry('MUI lightbox hidden');
+        if (mainVideoWasPlaying) {
+          addLogEntry('Main video was playing before MUI lightbox. Resuming playback.');
+          video.play(); 
+        } else {
+          addLogEntry('Main video was paused before MUI lightbox. Leaving it paused.');
+        }
+      });
+
+      // Controls for the video inside the MUI lightbox
+      document.getElementById('mui-play').addEventListener('click', () => {
+        muiVideo.play();
+        addLogEntry('MUI video: Play button clicked');
+      });
+      document.getElementById('mui-pause').addEventListener('click', () => {
+        muiVideo.pause();
+        addLogEntry('MUI video: Pause button clicked');
+      });
+      document.getElementById('mui-rewind').addEventListener('click', () => {
+        muiVideo.currentTime = Math.max(0, muiVideo.currentTime - 10); // Prevent negative time
+        addLogEntry('MUI video: Rewind 10s button clicked');
+      });
+      document.getElementById('mui-ff').addEventListener('click', () => {
+        if (muiVideo.duration && !isNaN(muiVideo.duration)) { 
+            muiVideo.currentTime = Math.min(muiVideo.duration, muiVideo.currentTime + 10);
+        } else {
+            muiVideo.currentTime += 10; 
+        }
+        addLogEntry('MUI video: FF 10s button clicked');
+      });
+      
+      // Add event listeners for muiVideo to log its play/pause states
+      muiVideo.addEventListener('play', () => {
+        addLogEntry('MUI video started playing (event listener)');
+      });
+      
+      muiVideo.addEventListener('pause', () => {
+        addLogEntry('MUI video paused (event listener)');
       });
       
       // Log initialization

@@ -8,45 +8,54 @@ module.exports = (env, argv) => {
   // Base config for development
   if (!isProduction) {
     return {
-      entry: './src/index.js',
+      entry: {
+        'quad-tap': './src/index.js',
+        'mui-debug-app': './src/mui-debug-app.tsx'
+      },
       output: {
         path: path.resolve(__dirname, 'dist'),
-        filename: 'quad-tap.js',
-        library: {
-          name: 'QuadTap',
-          type: 'umd',
-          export: 'default',
-          umdNamedDefine: true
-        },
+        filename: '[name].js',
         globalObject: 'this'
       },
       module: {
         rules: [
           {
-            test: /\.js$/,
+            test: /\.(js|jsx|ts|tsx)$/,
             exclude: /node_modules/,
             use: {
               loader: 'babel-loader',
               options: {
-                presets: ['@babel/preset-env']
+                presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript']
               }
             }
           }
         ]
+      },
+      resolve: {
+        extensions: ['.js', '.jsx', '.ts', '.tsx']
       },
       plugins: [
         new CleanWebpackPlugin(),
         new HtmlWebpackPlugin({
           template: './test/index.html',
           filename: 'index.html',
+          chunks: ['quad-tap'],
           inject: 'head',
           scriptLoading: 'blocking'
         }),
         new HtmlWebpackPlugin({
           template: './test/video-api-test.html',
           filename: 'video-api-test.html',
+          chunks: ['quad-tap'],
           inject: 'head',
           scriptLoading: 'blocking'
+        }),
+        new HtmlWebpackPlugin({
+          template: './test/mui-debug.html',
+          filename: 'mui-debug.html',
+          chunks: ['mui-debug-app'],
+          inject: 'body',
+          scriptLoading: 'defer'
         })
       ],
       devServer: {

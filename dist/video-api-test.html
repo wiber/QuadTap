@@ -1,4 +1,11 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QuadTap Video API Integration Test</title><style>body {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuadTap Video API Integration Test</title>
+  <style>
+    body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 20px;
@@ -290,7 +297,85 @@
     .quad-tap-emoji-sw {
       bottom: 5%;
       left: 5%;
-    }</style><script src="quad-tap.js"></script></head><body><div class="container"><h1>QuadTap Video API Integration Test</h1><p>This page demonstrates the integration of QuadTap with video player APIs, ensuring the video only pauses when the lightbox is open.</p><div class="video-container" id="main-video-container"><video id="main-video" controls data-video-id="test-video-123"><source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">Your browser does not support the video tag.</video><div class="coordinate-grid" id="coordinate-grid"><div class="grid-line-h" style="top: 25%"></div><div class="grid-line-h" style="top: 50%"></div><div class="grid-line-h" style="top: 75%"></div><div class="grid-line-v" style="left: 25%"></div><div class="grid-line-v" style="left: 50%"></div><div class="grid-line-v" style="left: 75%"></div><div class="grid-center"></div></div></div><div class="controls"><button id="init-btn">Initialize QuadTap</button> <button id="destroy-btn">Destroy QuadTap</button> <button id="clear-log-btn">Clear Log</button> <button id="clear-storage-btn">Clear Storage</button> <button id="toggle-grid-btn">Toggle Grid</button></div><div class="video-state"><h3>Video State</h3><div id="video-state-container"><div class="state-item"><span class="state-key">Playing:</span> <span class="state-value" id="video-playing">false</span></div><div class="state-item"><span class="state-key">Current Time:</span> <span class="state-value" id="video-current-time">0</span></div><div class="state-item"><span class="state-key">Duration:</span> <span class="state-value" id="video-duration">0</span></div><div class="state-item"><span class="state-key">Volume:</span> <span class="state-value" id="video-volume">0</span></div><div class="state-item"><span class="state-key">Muted:</span> <span class="state-value" id="video-muted">false</span></div><div class="state-item"><span class="state-key">Playback Rate:</span> <span class="state-value" id="video-playback-rate">1</span></div></div></div><div class="event-log"><h3>Event Log</h3><div id="log-container"></div></div><div class="storage-viewer"><h3>Local Storage</h3><div id="storage-container"></div></div></div><div class="coordinates-display" id="coordinates-display">X: 0, Y: 0</div><script src="../dist/quad-tap.js"></script><script>document.addEventListener('DOMContentLoaded', function() {
+    }
+  </style>
+<script src="quad-tap.js"></script></head>
+<body>
+  <div class="container">
+    <h1>QuadTap Video API Integration Test</h1>
+    <p>This page demonstrates the integration of QuadTap with video player APIs, ensuring the video only pauses when the lightbox is open.</p>
+    
+    <div class="video-container" id="main-video-container">
+      <video id="main-video" controls data-video-id="test-video-123">
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <div class="coordinate-grid" id="coordinate-grid">
+        <div class="grid-line-h" style="top: 25%"></div>
+        <div class="grid-line-h" style="top: 50%"></div>
+        <div class="grid-line-h" style="top: 75%"></div>
+        <div class="grid-line-v" style="left: 25%"></div>
+        <div class="grid-line-v" style="left: 50%"></div>
+        <div class="grid-line-v" style="left: 75%"></div>
+        <div class="grid-center"></div>
+      </div>
+    </div>
+    
+    <div class="controls">
+      <button id="init-btn">Initialize QuadTap</button>
+      <button id="destroy-btn">Destroy QuadTap</button>
+      <button id="clear-log-btn">Clear Log</button>
+      <button id="clear-storage-btn">Clear Storage</button>
+      <button id="toggle-grid-btn">Toggle Grid</button>
+    </div>
+    
+    <div class="video-state">
+      <h3>Video State</h3>
+      <div id="video-state-container">
+        <div class="state-item">
+          <span class="state-key">Playing:</span>
+          <span class="state-value" id="video-playing">false</span>
+        </div>
+        <div class="state-item">
+          <span class="state-key">Current Time:</span>
+          <span class="state-value" id="video-current-time">0</span>
+        </div>
+        <div class="state-item">
+          <span class="state-key">Duration:</span>
+          <span class="state-value" id="video-duration">0</span>
+        </div>
+        <div class="state-item">
+          <span class="state-key">Volume:</span>
+          <span class="state-value" id="video-volume">0</span>
+        </div>
+        <div class="state-item">
+          <span class="state-key">Muted:</span>
+          <span class="state-value" id="video-muted">false</span>
+        </div>
+        <div class="state-item">
+          <span class="state-key">Playback Rate:</span>
+          <span class="state-value" id="video-playback-rate">1</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="event-log">
+      <h3>Event Log</h3>
+      <div id="log-container"></div>
+    </div>
+    
+    <div class="storage-viewer">
+      <h3>Local Storage</h3>
+      <div id="storage-container"></div>
+    </div>
+  </div>
+  
+  <div class="coordinates-display" id="coordinates-display">X: 0, Y: 0</div>
+  
+  <!-- Use the non-minified version during development -->
+  <script src="../dist/quad-tap.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
       // Initialize elements
       const initBtn = document.getElementById('init-btn');
       const destroyBtn = document.getElementById('destroy-btn');
@@ -620,4 +705,7 @@
           addLogEntry('success', 'Coordinates is available');
         }
       }
-    });</script></body></html>
+    });
+  </script>
+</body>
+</html>
